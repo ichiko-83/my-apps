@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>光熱費ノート</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;600&family=DM+Mono:wght@300;400&display=swap');
+
+  :root {
+    --ink: #1a1714;
+    --paper: #f5f0e8;
+    --paper-mid: #ede7d8;
+    --paper-dark: #d9d0be;
+    --electric: #2563c0;
+    --gas: #c05e25;
+    --water: #1f8f7a;
+    --oil: #7a5a1f;
+    --accent: #8b2525;
+    --grid: rgba(26,23,20,0.08);
+    --shadow: rgba(26,23,20,0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Serif JP', serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 27px, var(--grid) 27px, var(--grid) 28px),
+      repeating-linear-gradient(90deg, transparent, transparent 27px, var(--grid) 27px, var(--grid) 28px);
+  }
+
+  header {
+    padding: 32px 24px 20px;
+    border-bottom: 2px solid var(--ink);
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    background: var(--paper);
+  }
+
+  header h1 {
+    font-size: 1.6rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  header .subtitle {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--ink);
+    opacity: 0.5;
+    letter-spacing: 0.1em;
+  }
+
+  .tabs {
+    display: flex;
+    border-bottom: 2px solid var(--ink);
+    background: var(--paper);
+  }
+
+  .tab {
+    padding: 12px 20px;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 0.82rem;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--ink);
+    opacity: 0.45;
+    letter-spacing: 0.05em;
+    border-right: 1px solid var(--paper-dark);
+    transition: opacity 0.2s;
+  }
+
+  .tab.active {
+    opacity: 1;
+    background: var(--paper-mid);
+    font-weight: 600;
+    border-bottom: 2px solid var(--paper-mid);
+    margin-bottom: -2px;
+  }
+
+  .panel { display: none; padding: 24px; }
+  .panel.active { display: block; }
+
+  /* ── グラフパネル ── */
+  .chart-controls {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    align-items: center;
+  }
+
+  .legend-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1.5px solid currentColor;
+    border-radius: 2px;
+    background: transparent;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.04em;
+  }
+
+  .legend-btn .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .legend-btn.off { opacity: 0.3; }
+
+  .legend-btn[data-key="electric"] { color: var(--electric); }
+  .legend-btn[data-key="gas"]      { color: var(--gas); }
+  .legend-btn[data-key="water"]    { color: var(--water); }
+  .legend-btn[data-key="oil"]      { color: var(--oil); }
+
+  .year-select {
+    margin-left: auto;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    border: 1.5px solid var(--ink);
+    background: var(--paper);
+    padding: 5px 10px;
+    cursor: pointer;
+    color: var(--ink);
+  }
+
+  .chart-wrap {
+    background: var(--paper-mid);
+    border: 1.5px solid var(--ink);
+    padding: 20px 16px 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  canvas#chart {
+    width: 100%;
+    display: block;
+  }
+
+  .no-data-msg {
+    text-align: center;
+    padding: 60px 20px;
+    opacity: 0.4;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── 入力パネル ── */
+  .input-form {
+    max-width: 480px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 0;
+    margin-bottom: 2px;
+    border: 1.5px solid var(--ink);
+    margin-bottom: -1px;
+  }
+
+  .form-row label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    font-size: 0.82rem;
+    background: var(--paper-mid);
+    border-right: 1.5px solid var(--ink);
+    letter-spacing: 0.04em;
+  }
+
+  .form-row label .swatch {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .form-row input[type="number"],
+  .form-row input[type="month"],
+  .form-row select {
+    border: none;
+    background: var(--paper);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.88rem;
+    padding: 10px 12px;
+    color: var(--ink);
+    width: 100%;
+    outline: none;
+  }
+
+  .form-row input[type="number"]:focus,
+  .form-row input[type="month"]:focus {
+    background: #fff8ed;
+  }
+
+  .btn-save {
+    margin-top: 16px;
+    padding: 11px 28px;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 0.82rem;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .btn-save:hover { background: #3a3530; }
+
+  .toast {
+    display: inline-block;
+    margin-left: 12px;
+    font-size: 0.75rem;
+    color: var(--water);
+    opacity: 0;
+    transition: opacity 0.3s;
+    vertical-align: middle;
+  }
+
+  .toast.show { opacity: 1; }
+
+  /* ── 履歴パネル ── */
+  .history-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    align-items: center;
+  }
+
+  .history-table-wrap {
+    overflow-x: auto;
+    border: 1.5px solid var(--ink);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    min-width: 400px;
+  }
+
+  th {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 8px 12px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    text-align: left;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+  }
+
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--paper-dark);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+  }
+
+  tr:nth-child(even) td { background: var(--paper-mid); }
+
+  .del-btn {
+    background: none;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-size: 0.68rem;
+    padding: 2px 7px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+  }
+
+  .summary-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .summary-card {
+    flex: 1;
+    min-width: 110px;
+    border: 1.5px solid currentColor;
+    padding: 10px 14px;
+    border-radius: 2px;
+  }
+
+  .summary-card .label {
+    font-size: 0.68rem;
+    opacity: 0.6;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+  }
+
+  .summary-card .value {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.05rem;
+  }
+
+  .summary-card[data-key="electric"] { color: var(--electric); }
+  .summary-card[data-key="gas"]      { color: var(--gas); }
+  .summary-card[data-key="water"]    { color: var(--water); }
+  .summary-card[data-key="oil"]      { color: var(--oil); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>光熱費ノート</h1>
+  <span class="subtitle">UTILITY COST TRACKER</span>
+</header>
+
+<div class="tabs">
+  <button class="tab active" data-panel="chart">📈 グラフ</button>
+  <button class="tab" data-panel="input">✏️ 入力</button>
+  <button class="tab" data-panel="history">📋 履歴</button>
+</div>
+
+<!-- グラフ -->
+<div class="panel active" id="panel-chart">
+  <div class="chart-controls">
+    <button class="legend-btn active" data-key="electric"><span class="dot" style="background:var(--electric)"></span>電気代</button>
+    <button class="legend-btn active" data-key="gas"><span class="dot" style="background:var(--gas)"></span>ガス代</button>
+    <button class="legend-btn active" data-key="water"><span class="dot" style="background:var(--water)"></span>水道代</button>
+    <button class="legend-btn active" data-key="oil"><span class="dot" style="background:var(--oil)"></span>灯油・その他</button>
+    <select class="year-select" id="yearSelect"></select>
+  </div>
+  <div class="chart-wrap">
+    <canvas id="chart" height="320"></canvas>
+    <div class="no-data-msg" id="noDataMsg" style="display:none">データがありません。「入力」タブから記録してください。</div>
+  </div>
+</div>
+
+<!-- 入力 -->
+<div class="panel" id="panel-input">
+  <div class="input-form">
+    <div class="form-row">
+      <label>年月</label>
+      <input type="month" id="inputMonth">
+    </div>
+    <div class="form-row">
+      <label><span class="swatch" style="background:var(--electric)"></span>電気代</label>
+      <input type="number" id="inputElectric" placeholder="円" min="0">
+    </div>
+    <div class="form-row">
+      <label><span class="swatch" style="background:var(--gas)"></span>ガス代</label>
+      <input type="number" id="inputGas" placeholder="円" min="0">
+    </div>
+    <div class="form-row">
+      <label><span class="swatch" style="background:var(--water)"></span>水道代</label>
+      <input type="number" id="inputWater" placeholder="円" min="0">
+    </div>
+    <div class="form-row">
+      <label><span class="swatch" style="background:var(--oil)"></span>灯油・その他</label>
+      <input type="number" id="inputOil" placeholder="円" min="0">
+    </div>
+    <div>
+      <button class="btn-save" id="saveBtn">保存する</button>
+      <span class="toast" id="toast">✓ 保存しました</span>
+    </div>
+  </div>
+</div>
+
+<!-- 履歴 -->
+<div class="panel" id="panel-history">
+  <div class="summary-row" id="summaryRow"></div>
+  <div class="history-controls">
+    <select class="year-select" id="histYearSelect"></select>
+  </div>
+  <div class="history-table-wrap">
+    <table id="histTable">
+      <thead>
+        <tr>
+          <th>年月</th>
+          <th>電気代</th>
+          <th>ガス代</th>
+          <th>水道代</th>
+          <th>灯油・その他</th>
+          <th>合計</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="histBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'konetsuhi_v1';
+const KEYS = ['electric','gas','water','oil'];
+const LABELS = { electric:'電気代', gas:'ガス代', water:'水道代', oil:'灯油・その他' };
+const COLORS = {
+  electric: getComputedStyle(document.documentElement).getPropertyValue('--electric').trim(),
+  gas:      getComputedStyle(document.documentElement).getPropertyValue('--gas').trim(),
+  water:    getComputedStyle(document.documentElement).getPropertyValue('--water').trim(),
+  oil:      getComputedStyle(document.documentElement).getPropertyValue('--oil').trim(),
+};
+
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; }
+}
+function saveData(d) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
+
+// ── タブ切替 ──
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('panel-' + t.dataset.panel).classList.add('active');
+    if (t.dataset.panel === 'chart') renderChart();
+    if (t.dataset.panel === 'history') renderHistory();
+  });
+});
+
+// ── 年月初期値 ──
+const today = new Date();
+const ymStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0');
+document.getElementById('inputMonth').value = ymStr;
+
+// ── 保存 ──
+document.getElementById('saveBtn').addEventListener('click', () => {
+  const ym = document.getElementById('inputMonth').value;
+  if (!ym) return;
+  const data = loadData();
+  data[ym] = {
+    electric: Number(document.getElementById('inputElectric').value) || 0,
+    gas:      Number(document.getElementById('inputGas').value) || 0,
+    water:    Number(document.getElementById('inputWater').value) || 0,
+    oil:      Number(document.getElementById('inputOil').value) || 0,
+  };
+  saveData(data);
+  // toast
+  const toast = document.getElementById('toast');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+  populateYearSelects();
+});
+
+// ── 凡例ボタン ──
+const visible = { electric:true, gas:true, water:true, oil:true };
+document.querySelectorAll('.legend-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const k = btn.dataset.key;
+    visible[k] = !visible[k];
+    btn.classList.toggle('off', !visible[k]);
+    renderChart();
+  });
+});
+
+// ── 年セレクト ──
+function getYears() {
+  const data = loadData();
+  const years = new Set(Object.keys(data).map(k => k.slice(0,4)));
+  if (years.size === 0) years.add(String(today.getFullYear()));
+  return [...years].sort().reverse();
+}
+
+function populateYearSelects() {
+  const years = getYears();
+  ['yearSelect','histYearSelect'].forEach(id => {
+    const sel = document.getElementById(id);
+    const cur = sel.value;
+    sel.innerHTML = years.map(y => `<option value="${y}">${y}年</option>`).join('');
+    if (years.includes(cur)) sel.value = cur;
+  });
+}
+
+document.getElementById('yearSelect').addEventListener('change', renderChart);
+document.getElementById('histYearSelect').addEventListener('change', renderHistory);
+
+// ── グラフ描画 ──
+function renderChart() {
+  const canvas = document.getElementById('chart');
+  const noData = document.getElementById('noDataMsg');
+  const data = loadData();
+  const year = document.getElementById('yearSelect').value;
+
+  const months = Array.from({length:12}, (_,i) => year + '-' + String(i+1).padStart(2,'0'));
+  const hasAny = months.some(m => data[m]);
+
+  if (!hasAny) {
+    canvas.style.display = 'none';
+    noData.style.display = 'block';
+    return;
+  }
+  canvas.style.display = 'block';
+  noData.style.display = 'none';
+
+  const W = canvas.parentElement.clientWidth - 32;
+  const H = 320;
+  canvas.width = W * devicePixelRatio;
+  canvas.height = H * devicePixelRatio;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+
+  const PAD = { top: 20, right: 20, bottom: 36, left: 56 };
+  const gW = W - PAD.left - PAD.right;
+  const gH = H - PAD.top - PAD.bottom;
+
+  // max value
+  let maxVal = 0;
+  months.forEach(m => {
+    if (!data[m]) return;
+    KEYS.forEach(k => { if (visible[k]) maxVal = Math.max(maxVal, data[m][k] || 0); });
+  });
+  if (maxVal === 0) maxVal = 10000;
+  const topVal = Math.ceil(maxVal / 5000) * 5000 * 1.1;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // grid
+  ctx.strokeStyle = 'rgba(26,23,20,0.1)';
+  ctx.lineWidth = 1;
+  const gridLines = 5;
+  for (let i = 0; i <= gridLines; i++) {
+    const y = PAD.top + gH - (gH * i / gridLines);
+    ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(PAD.left + gW, y); ctx.stroke();
+    ctx.fillStyle = 'rgba(26,23,20,0.45)';
+    ctx.font = `10px 'DM Mono', monospace`;
+    ctx.textAlign = 'right';
+    const val = Math.round(topVal * i / gridLines);
+    ctx.fillText(val >= 10000 ? (val/10000).toFixed(1)+'万' : val+'円', PAD.left - 6, y + 4);
+  }
+
+  // x axis labels
+  const step = gW / 11;
+  ctx.fillStyle = 'rgba(26,23,20,0.55)';
+  ctx.font = `10px 'DM Mono', monospace`;
+  ctx.textAlign = 'center';
+  months.forEach((m, i) => {
+    const x = PAD.left + step * i;
+    ctx.fillText((i+1)+'月', x, H - 8);
+  });
+
+  // lines
+  KEYS.forEach(k => {
+    if (!visible[k]) return;
+    ctx.strokeStyle = COLORS[k];
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    let started = false;
+    months.forEach((m, i) => {
+      const val = data[m] ? (data[m][k] || 0) : null;
+      if (val === null) return;
+      const x = PAD.left + step * i;
+      const y = PAD.top + gH - (gH * val / topVal);
+      if (!started) { ctx.moveTo(x, y); started = true; }
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    // dots + values
+    months.forEach((m, i) => {
+      const val = data[m] ? (data[m][k] || 0) : null;
+      if (val === null) return;
+      const x = PAD.left + step * i;
+      const y = PAD.top + gH - (gH * val / topVal);
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI*2);
+      ctx.fillStyle = COLORS[k];
+      ctx.fill();
+      ctx.strokeStyle = '#f5f0e8';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      if (val > 0) {
+        ctx.fillStyle = COLORS[k];
+        ctx.font = `9px 'DM Mono', monospace`;
+        ctx.textAlign = 'center';
+        ctx.fillText(val >= 10000 ? (val/10000).toFixed(1)+'万' : val, x, y - 10);
+      }
+    });
+  });
+}
+
+// ── 履歴 ──
+function renderHistory() {
+  const data = loadData();
+  const year = document.getElementById('histYearSelect').value;
+  const months = Array.from({length:12}, (_,i) => year + '-' + String(i+1).padStart(2,'0'))
+    .filter(m => data[m]).reverse();
+
+  // summary (year total per key)
+  const totals = { electric:0, gas:0, water:0, oil:0 };
+  Object.keys(data).filter(m => m.startsWith(year)).forEach(m => {
+    KEYS.forEach(k => totals[k] += data[m][k] || 0);
+  });
+  const summaryRow = document.getElementById('summaryRow');
+  summaryRow.innerHTML = KEYS.map(k => `
+    <div class="summary-card" data-key="${k}">
+      <div class="label">${LABELS[k]}（年計）</div>
+      <div class="value">${totals[k].toLocaleString()}円</div>
+    </div>`).join('');
+
+  const tbody = document.getElementById('histBody');
+  if (months.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;opacity:0.4;padding:24px">データなし</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = months.map(m => {
+    const r = data[m];
+    const total = KEYS.reduce((s,k) => s + (r[k]||0), 0);
+    return `<tr>
+      <td>${m.replace('-','年')}月</td>
+      ${KEYS.map(k => `<td>${r[k] ? r[k].toLocaleString()+'円' : '—'}</td>`).join('')}
+      <td><strong>${total.toLocaleString()}円</strong></td>
+      <td><button class="del-btn" data-ym="${m}">削除</button></td>
+    </tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('.del-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (!confirm(btn.dataset.ym + ' のデータを削除しますか？')) return;
+      const d = loadData();
+      delete d[btn.dataset.ym];
+      saveData(d);
+      populateYearSelects();
+      renderHistory();
+    });
+  });
+}
+
+// ── 初期化 ──
+populateYearSelects();
+renderChart();
+</script>
+</body>
+</html>
