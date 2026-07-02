@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="theme-color" content="#080B10">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="相関マップ">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAAFjklEQVR4nO3dMXLcOBBGYdi1wVY5sTNdxKHiVeBbOPdhnPsWG8ixwr2IMl9hA1axWCT/GYAYNBqN92Urcctj4bmJGXJGH/7+9DkBZz72fgDwizggEQck4oBEHJCIAxJxQCIOSMQBiTggEQck4oBEHJCIAxJxQCIOSMQBiTggEQck4oBEHJCIAxJxQCIOSMQBiTggEQck4oBEHJCIAxJxQCIOSH/1fgDz+vP9x/GLX379tH8kygc+2cfeaRZbThLhtGLtbhmZxxggDlP5q+6hD+KwU7re3fsgDiPXVrpvH8QBiTgs1AyAjsODOCARByTigOTr5fN//vv3+MXfX7/ZPxIkP3GcZrH9FonYc3FauVFG0TF4rP5x5K/6uH3UXEjreBGucxyl6z1uHyPqGce1lR60j2sDoO+1+/6nlXmUrnT3uzq6xVEzAAYdHqlkvbuXkZgc9nJW3UMZyc/rHLG9vz6nlJ5e3pb/XNbe/z2kxGHn/fV57SM56+AUp5XmlrExIuJoa9wyEqeVpnZlbM8pp4epA3rpNjlqLqSNeBHO28Ln4LTSynZsjFhG6hvHtQEwxNgYequx6jw5Sld6xDIGHRupexypZL0pw1j/OFLeqm+PeX99HmJuZ5axHubtL+XrXfY595B63uhdfmw+n836ep2j9MSxe0G6L2//7uu5OK0U2dXgZEkibTVW48WRvPaxilFG8hbHstPMWWxXfXjeBtXwFUcRJ31ELSMNHUdy0Ie3M9pjjR1H6tpHyE3olqM4Lj/X7z4/jo8hBkdx1Dj20TqRwFuNVZA40tkKtesj9lZjFSeOlNLTy5vBKSb8VmMVKo5F0z4aleHz2lvAOJLVFjXwzFh4iePhlyVb9DHDJnTLSxwtPLYPVwPfRuQ40uP6mGcTuhU8jtTg/DJJGWmGONJD+5injOTtTrB2nl7ebjRx+q1tB7f/96hmiSNtFni76neLWQ+eamYsXJxWzG6v3b2EmjMMJhwYKxdxdJG/6tP2MWkcpes9Zx8zxnFtpVv34XBPM2MczvmZUtPFUfOj97NsNqaLA/n6x+HzbaJIHuKAW8QBiTggEQek6eKo2fbOtmWeLg7k6xxHl+ex1/6s2cZG6h6HpZp7xycsI00Sx/rW2Wt9lN4Ccpm3tzbFj2P3gy7t41iGk5UzEPk2weMqHmtYvnL3HtLdMcfbDUMKG0dOGTnf2h2zSyR2HzFPK8f3IHl+l6VbPeNo8Tz2+LEtD//HPU8foSZH0amkxiR9BInjdGA03RDM0EeEOMwGxu0/ZZTf5ZBv+DiMB8aO5QeR2Rs4DoO9Zw6bDyLrolsclU9V+g6Mo5B9jDc5nAyMo3h9DBZHr71npvo+XF17GyYO+yer10SaH75+x5vifGAc1TxgP2/kGWByDDEwdmI8xXUdh9u9Z44AT3FNL9n/+f7j+MUvv36eHjzcqeTU7sPExrrKb7TnOM1ia5tIjCy2Bp1/FqeVu2Xsjtn97Eb5Ud4w6Pml+eTIKWO1mx8Bstgabn60jaOojIXagsRw94yZ8wvbzTSM40IZi9h9JPFKxmkWW/aJuH4qG9XSRFEZmcc8VqvJcXlsLMIPj62iVbecH0yOzkrngeX8II6erq20WR/EAYk4uqkZADbDgzggEQekVnHUPBed6nmsZ0wOSA3juDYAGBt+tJ0cpStNGa40P63kr/dsZdS8EG7zIrrFniNn1WcrYwimb00ouod0EhdezjK79jbG+1Zi46ospPz1Nr7fhzhcyFl1+zvBOK34Mss9pBgdpxVIxAGJOCARByTigEQckIgDEnFAIg5IxAGJOCARByTigEQckIgDEnFAIg5IxAGJOCARByTigEQckIgDEnFAIg5IxAGJOCARByTigEQckIgDEnFAIg5IxAGJOCD9D+OmQbbMmhf0AAAAAElFTkSuQmCC">
+<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAAFjklEQVR4nO3dMXLcOBBGYdi1wVY5sTNdxKHiVeBbOPdhnPsWG8ixwr2IMl9hA1axWCT/GYAYNBqN92Urcctj4bmJGXJGH/7+9DkBZz72fgDwizggEQck4oBEHJCIAxJxQCIOSMQBiTggEQck4oBEHJCIAxJxQCIOSMQBiTggEQck4oBEHJCIAxJxQCIOSMQBiTggEQck4oBEHJCIAxJxQCIOSH/1fgDz+vP9x/GLX379tH8kygc+2cfeaRZbThLhtGLtbhmZxxggDlP5q+6hD+KwU7re3fsgDiPXVrpvH8QBiTgs1AyAjsODOCARByTigOTr5fN//vv3+MXfX7/ZPxIkP3GcZrH9FonYc3FauVFG0TF4rP5x5K/6uH3UXEjreBGucxyl6z1uHyPqGce1lR60j2sDoO+1+/6nlXmUrnT3uzq6xVEzAAYdHqlkvbuXkZgc9nJW3UMZyc/rHLG9vz6nlJ5e3pb/XNbe/z2kxGHn/fV57SM56+AUp5XmlrExIuJoa9wyEqeVpnZlbM8pp4epA3rpNjlqLqSNeBHO28Ln4LTSynZsjFhG6hvHtQEwxNgYequx6jw5Sld6xDIGHRupexypZL0pw1j/OFLeqm+PeX99HmJuZ5axHubtL+XrXfY595B63uhdfmw+n836ep2j9MSxe0G6L2//7uu5OK0U2dXgZEkibTVW48WRvPaxilFG8hbHstPMWWxXfXjeBtXwFUcRJ31ELSMNHUdy0Ie3M9pjjR1H6tpHyE3olqM4Lj/X7z4/jo8hBkdx1Dj20TqRwFuNVZA40tkKtesj9lZjFSeOlNLTy5vBKSb8VmMVKo5F0z4aleHz2lvAOJLVFjXwzFh4iePhlyVb9DHDJnTLSxwtPLYPVwPfRuQ40uP6mGcTuhU8jtTg/DJJGWmGONJD+5injOTtTrB2nl7ebjRx+q1tB7f/96hmiSNtFni76neLWQ+eamYsXJxWzG6v3b2EmjMMJhwYKxdxdJG/6tP2MWkcpes9Zx8zxnFtpVv34XBPM2MczvmZUtPFUfOj97NsNqaLA/n6x+HzbaJIHuKAW8QBiTggEQek6eKo2fbOtmWeLg7k6xxHl+ex1/6s2cZG6h6HpZp7xycsI00Sx/rW2Wt9lN4Ccpm3tzbFj2P3gy7t41iGk5UzEPk2weMqHmtYvnL3HtLdMcfbDUMKG0dOGTnf2h2zSyR2HzFPK8f3IHl+l6VbPeNo8Tz2+LEtD//HPU8foSZH0amkxiR9BInjdGA03RDM0EeEOMwGxu0/ZZTf5ZBv+DiMB8aO5QeR2Rs4DoO9Zw6bDyLrolsclU9V+g6Mo5B9jDc5nAyMo3h9DBZHr71npvo+XF17GyYO+yer10SaH75+x5vifGAc1TxgP2/kGWByDDEwdmI8xXUdh9u9Z44AT3FNL9n/+f7j+MUvv36eHjzcqeTU7sPExrrKb7TnOM1ia5tIjCy2Bp1/FqeVu2Xsjtn97Eb5Ud4w6Pml+eTIKWO1mx8Bstgabn60jaOojIXagsRw94yZ8wvbzTSM40IZi9h9JPFKxmkWW/aJuH4qG9XSRFEZmcc8VqvJcXlsLMIPj62iVbecH0yOzkrngeX8II6erq20WR/EAYk4uqkZADbDgzggEQekVnHUPBed6nmsZ0wOSA3juDYAGBt+tJ0cpStNGa40P63kr/dsZdS8EG7zIrrFniNn1WcrYwimb00ouod0EhdezjK79jbG+1Zi46ospPz1Nr7fhzhcyFl1+zvBOK34Mss9pBgdpxVIxAGJOCARByTigEQckIgDEnFAIg5IxAGJOCARByTigEQckIgDEnFAIg5IxAGJOCARByTigEQckIgDEnFAIg5IxAGJOCARByTigEQckIgDEnFAIg5IxAGJOCD9D+OmQbbMmhf0AAAAAElFTkSuQmCC">
+<link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjogIuOCu+OCr+OCv+ODvOebuOmWouODnuODg+ODlyIsICJzaG9ydF9uYW1lIjogIuebuOmWouODnuODg+ODlyIsICJzdGFydF91cmwiOiAiLi9zZWN0b3Itb3ZlcmxhcC1tYXAuaHRtbCIsICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLCAiYmFja2dyb3VuZF9jb2xvciI6ICIjMDgwQjEwIiwgInRoZW1lX2NvbG9yIjogIiMwODBCMTAiLCAiaWNvbnMiOiBbeyJzcmMiOiAiZGF0YTppbWFnZS9wbmc7YmFzZTY0LGlWQk9SdzBLR2dvQUFBQU5TVWhFVWdBQUFnQUFBQUlBQ0FJQUFBQjdHa090QUFBUm1rbEVRVlI0bk8zZE1aSVVSeGJINFdFRGd3Z2M1SEVSbWRqQzBDM2s2ekR5ZFFzWnlNYlVSZkIwaFRXR0dFWk0wMTFWWFpYNVh2Mi9MOVpZN1k2bWs0Wit2NnlzcHVmVm03ZnZIZ0RJODcvWkN3QmdEZ0VBQ0NVQUFLRUVBQ0NVQUFDRUVnQ0FVQUlBRUVvQUFFSUpBRUFvQVFBSUpRQUFvUVFBSUpRQUFJUVNBSUJRQWdBUVNnQUFRZ2tBUUNnQkFBZ2xBQUNoQkFBZ2xBQUFoQklBZ0ZBQ0FCQktBQUJDQ1FCQUtBRUFDQ1VBQUtFRUFDQ1VBQUNFRWdDQVVBSUFFRW9BQUVJSkFFQW9BUUFJSlFBQW9RUUFJSlFBQUlRU0FJQlFBZ0FRU2dBQVFna0FRQ2dCQUFnbEFBQ2hCQUFnbEFBQWhCSUFnRkFDQUJCS0FBQkNDUUJBS0FFQUNDVUFBS0VFQUNDVUFBQ0VFZ0NBVUFJQUVFb0FBRUlKQUVBb0FRQUlKUUFBb1FRQUlKUUFBSVFTQUlCUUFnQVFTZ0FBUWdrQVFDZ0JBQWdsQUFDaEJBQWdsQUFBaEJJQWdGQUNBQkJLQUFCQ0NRQkFLQUVBQ0NVQUFLRUVBQ0NVQUFDRUVnQ0FVQUlBRUVvQUFFSUpBRUFvQVFBSUpRQUFvUVFBSUpRQUFJUVNBSUJRQWdBUVNnQUFRZ2tBUUNnQkFBajFldllDZ01iKy9lMzM2MS93MDU5L2pGa0pHN3g2OC9iZDdEVUFuZHdjK2o4aUJ0VUlBTERJNXJuL2toSVVJUURBRFR1Ty91ZGtZRG9CQUg3b29OSC9uQXhNNUYxQXdHVURwdit3UitFaVZ3REE5NllNWlpjQzQ3a0NBUDVqMXBiY3BjQjRBZ0I4TTNjS2E4QmdBZ0I4VldIK1ZsaEREZ0VBSGg0cVRkNDZLems5QVFES3pkeHE2emtyQVlCME5hZHR6VldkakFBQWhCSUFpRlo1bzExNWJlY2dBSkNyL29TdHY4TFdCQUFnbEFCQXFDNmI2eTdyN0VnQUFFSUpBQ1RxdGEzdXRkcEdCQUFnbEFBQWhCSUFpTlB4UktYam11c1RBSUJRQWdBUVNnQUFRZ2tBWk9sN21ONTM1V1VKQUVBb0FRQUlKUUFBb1FRQUlOVHIyUXZnbWwvKytldjZGL3o5ODY5alZnS2Nqd0NVYzNQby8raUx4UUJZUlFDcVdEWDNyMzhISlFDV0VJRDU3aC85RjcraERBRFhDY0JNdTQvK2w5OWNCb0FmOFM2Z2FRNmQvb01mQmVqbzFadTM3MmF2SWM2VW9leFNnQ2ROUDFQaHB6Ly9tTDJFczNFRk1OcXNMYmxMQWVBN0FqRFUzQ21zQWNCekFqQk9oZmxiWVExQUVRSXdTSjNKVzJjbHpOTHhNTDNqbXVzVGdCR3F6ZHhxNndHbUVJREQxWnkyTlZjRmpDUUFrS2pYaVVxdjFUWWlBTWVxdk5HdXZEWmdBQUU0VVAwSlczK0ZIS2ZMdHJyTE9qc1NBSUJRQW5DVUxwdnJMdXZrQ1BVMzEvVlgySm9BUUxUS0U3YnkyczVCQUE3UmExdmRhN1hBWGdRQTB0WGNhTmRjMWNrSUFGQnUybFpiejFrSndQNDZucWgwWERQN3FqTno2NnprOUFRQStLckM1SzJ3aGh3Q0FId3pkLzZhL29NSkFQQWZzNmF3NlQrZW53bThzOWFINlg1dU1NOE4rOUhCUnY4c3JnQ0F5OGJNWmROL290ZXpGd0RVOVRpZEQ3b1VNUHFuRXdBSTllWFRoNGVIaC9jZlA5Lzh5dDB6WVBRWElRQ1E2SEg2UC82WEpRMTRlRGExTjVmQTNLOUdBQ0RkOGdZOGVqN0hiOGJBMEs5TUFDRE8wL2IvdS85bFZRWWVtZSt0ZVJjUVpIazUvWmY4WDV5U0FFQ1FteU5lQTZJSUFLUllNdHczbkFMUmx3QUFoQktBbmZYOU5JVytLMmNKMjM5ZUVnQTRQOU9maXdRQVRtNzY5UC95NllON3l6WDVld0NRYnEvcGI4cTM0d3BnZngwUDB6dXVtU1VNWmE0UUFEaXQ2WWMvRkNjQWNFN2pwLy8xNytaYXBDQUJPRVN2RTVWZXEyVUplMytXRUFDQVVBSndsQzdiNmk3clpEbmJmeFlTQURnVjA1L2xCT0JBOVRmWDlWZklLcVkvcXdqQXNTcFAyTXByNHlDbVA4OEpBSnlFOTFteWxnQWNydVpHdSthcTJNemhEeHNJd0FqVnBtMjE5WEFuMDU5dEJHQ1FPak8zemtyWWhlblBaZ0l3VG9YSlcyRU5RQkVDTU5UYytXdjZuMCsxN2IrUEErcEZBRWFiTllWdlBxNmYydEZPdGVsUE82L2V2SDAzZXcyaGZ2bm5yekVQdENRNXowZUprZEZDMmVsL2ZXSCtkSlhpQ21DYU1aY0NhNmYveTMra0thT1dtL3hJeUprZXAvTkJsd0lMQTNOeDNILzU5TUg0cUV5azJZVWpvQ3Ayek1EeWF3dFg2eDJWUGZ4NTVBOVZJd0pRenVZU3JEMVRLajVIdUtqKzc1b0FOQ0lBcGQyTXdlWWJDY3ZQRUx4aTY2Zy8vUjhFb0JYM0FFcXI4TTU5OXdQZ3JMd0xLTlNxbWU2V1l3VXR0di8wSWdDNU5LQVIwNThqQ0VBMERXakI5T2NnQXBCT0EwN0E5R2NiQVVBRFNtdjNoUHM4dUVZRWdJY0hEYWpLNFErSEVvQmFIaitTYzhvSGMycEFOYVkvUi9QM0FPcDYrZm8vK3RYKy91UG41WlBkM3c4NGxPblBBSzRBK0EvWEFaQkRBUGllQmt4bis4OFlBc0FGR2pDUjZjOHdBc0JsR2pDRjZjOUlBbEJJdFRHcUFRV1ovdXhJQUxoR0EwYnlCREtZQUxReGErdW5BV000L0dFOEFlQTJEVGlhNmM4VUFzQWlHbkNjODAxL0h3ZlVoUUN3bEFiQXlRZ0FLMmpBN3M2My9hY1JBYWlpeTdqVWdCMlovc3dsQUt5bUFic3cvWmxPQUhxb05nZzBZSUJxdittY2p3Q3drUWJjd3hOQ0JRTEFkaHF3amNNZmloQUE3cUlCYTVuKzFDRUFKYlNlakJxd25PbFBLUUxBRGpRQU9oS0FCbHBzQ1RYZ0p0dC9xaEVBZHFNQlY2Uk5meDhIMUlJQXNDY051Q2h0K3RPRkFMQXpEZGpBOUdjS0FXQi9HdkRjNlgrQjlDVUE4NTF5UUdqQUk0Yy9WQ1lBSEVVRFRIK0tFNERxV2crSTVBYVkvdFFuQUJ3cnVRRlFuQUJ3dU1BRzJQN1RnZ0F3UWxRRFRIKzZFQUFHQ1dtQTZVOGpBakJaMzBtM1FVZ0RyalA5cVVNQUdPcmNEV2kzNEVQNU9LRDZCS0MwVSs0V3o5b0FoeiswSXdCTWNMNEdtUDUwSkFETWNhWUdtUDQwSlFCTWM2WUdRRWNDd0V3bmFJRHRQMzBKd0V3MUo5cGdyUnRnK3RPYUFEQmYzd2JjWExucFQyVUNVRmZVN0RobEE2SitCK25vOWV3RndGZnZQMzRlTU5sdlBzU0dxZjM0cjVUS0Vpd2hBQlN5c0FGclovU3EwZno4aTFjOTBIZUx0LzJuUGdHZ2xwc05XRDVZNzkrU1AzMkhoUS82dEhqVG54WmV2WG43YnZZYWN1MDE2YzduUjgvTXd1ZmtvTk9ZNU4rUnpmd2hyOHhONEdrY0dWOXhjUzRzR1JaZlBuMDQ3b2s5OUp2RGVBSkFVZCtOKzRYVC83RGxqSDRVR0VBQWluSnAvUERzU2JqNWJBemVtN3NVNEJ3RWdOTGVmL3k4WlBxUFdVeVJ4NFc5Q0FDOXpaM0NHa0JyQWtCakZlWnZoVFhBTmdKQVYzVW1iNTJWd0NvQ01JZVJjYWRxVDJDMTljQVNBa0EvTmFkdHpWWEJGUUpRa2ZlQUFnTUlBTTFVM21oWFhodThKQUIwVW4vQzFsL2hZQzVuS3hNQVlCcTluRXNBYUtQTHNPaXlUaENBQ1F3SW9BSUJvSWRlMWV5MVdtSUpRRGx1bWdGakNBQkFLQUdnZ1k0bktoM1hUQm9CQUFnbEFBQ2hCR0EwSndOQUVRSkFkWDJUMlhmbGhCQ0FXcndIRkJoR0FJQmpYZC9XdUU2YVNBQUFRZ2tBUUNnQkFBZ2xBRU01N2dUcUVBQ0FVQUpRaVBlQUFpTUpBRUFvQVFBSUpRQlUxL2Rrck8vS0NTRUFBS0VFWUJ6dkFRVktFUURnY0Q0T3FDWUJxTUo1OFJVZG41eU9heWFOQUFDRUVnQ0FVQUpBRDcxT1ZIcXRsbGdDQUJCS0FBYnhQb2Y3ZGRsV2Qxa25DQUJBS0FFb3daNXhvZnBQVlAwVndoTUJvSm5LRTdieTJ1QWxBUUFJSlFDVTgrWFRoOGYvL09nTGFtNjBhNjRLcmhBQWFsbjRkcWxxMDdiYWVncnljVUFGQ2NBSS9uQXY4WExYZi8xNXF6TnpqVGFhRWdCSytOR1VyTitBSmROZkE2aEpBT2FyTU1VbXVuN2NmOVBjWjIvNW8yc0FCUWtBTXkwWml6ZS9abFlEYmo3dXFoTXRHRThBbUdiNVFGelNnSkVaV1BKd0Y5ZXNBWlFpQUV5dzl0aG40WEFmMDRBbGozTGxWM2Zua1Jmc1NBQVliZTM0V3pYV0Q3MFVXUGpOZHpuWGdnRmV6MTdBK1htcFB6bDA5TC84RjNkODVvKzQyZnZsMDRmdysvOU1Kd0FNTW16NnYvd09tMHV3WVEzdlAzN1dBTG9RZ01sQ1h2OUhuUGh2KzRZRDNsT2tBWFFoQUJ4ci9NWi83dmQvZXBTMTczR1NBY1p6RTVnRFZaditJNjM5dFNUY0svS1pHZFc0QXVBUXlhUC95ZHA3MFk2REdNd1ZBUHN6L1o5YjlhdXpDMllrQVRoVzRPdDU3ZjNlYzAvL1J4cEFUUUxBYmc3Nis3M25vQUVVSkFBem5Xa0NPdmE1YVcwRFpJQ2p1UW5Ndll6KzVkd1dwaFJYQU56RjlOL0FjUkJGQ0FBYmJUanhOLzJmYUFBVkNBQmIyUGpmVHdPWVRnQU9kTllYcmVtL0Y3ZUZtY3ROWUZZdytuZm50akFUdVFLWXB0M0wyUFEvVHM1eGtJOERLa1VBdU0zOTNnRnlHa0FkQXNBTk52N0RhQUNEQ1FEWDJQZ1A1cll3SXduQVVicS9NbjJ3enl4K2tBRERDQUFYT1BhWmErMjFsQWF3alFETVVYWml1dDliaHdad05BSGdHeHYvYWpTQVF3a0FYOW40MTZRQkhFY0FjTCszT204TjRpQUNrTTZ4VHd0dUMzTUVBVGhFaTVlZis3M3RhQUQ3RW9CUU52NU5hUUE3ZXZYbTdidlphemloNnkrOHVjUFU2RCtCN3Zkc0tyOUFvcmdDeUdMNm40UGJ3dXhDQUlLWS9tZml0akQzRTRBSTd2ZWVsUVp3RHdFNFB4di9jOU1BTnZNaklRL3gzV3R5MXF2TzZBL3gvdU5uUDFTU0RRUmdoT2V2dDJFeE1QMmpyRzNBZzk5eEhBR05OK1pWNThRL2tCOGt3Rm9DY0RZKzJDZVp0d2F4aWdDY2ltTWZIdHdXWmpFQk9BbHY5T1E1RFdBSkFUZ0RHMzllMGdCdThsbEE3VG54NTRxeW13TWZCMVNCdDRIZTY5L2Zmci8rQlQvOStjZEJEMTMydFUwZGo3L3AvcFlBRjdrQzJPTG0wUCtSSFdOZytyTkt0U3RGVndBVkNNQUttK2YrUy9lVXdPaG5tMUlOY0tsUmdRQXNzdVBvZjI1REJreC83bEdxQVV3bkFEY2NOUHFmVzVnQm81OWQrSVBFRTI4RHZXYkE5RC9vVWJ4bytSRi9XNWducmdBdUd6UDZ2M1B6VW1EaFM5SDBad25IUVFqQUJWT20vNk03RytCVnlpb2FFTTRSMFBjbVR2ODdIOTNyazdXY0JZVnpCZkFmYzZmL2srdlhBUzlmaDBZLzkzQmJPSllBZkZOaytqOWEzZ0N2UnU0M3F3Ry8vUFBYOVMvNCsrZGZkM2tnTGhLQXIwcE4vMGRYR3VBbk9uR0VNYmNFYmc3OUh4R0QzUW5BdzBQSjZmL291TThSZ291T2E4RG11ZitTRXV6Rmg4RUIzNno2MmNJTDdUajZuMzlER2JpZks0QzYyLzlITGdJWWIwa0RsbXovZHgvOUw4bkFQZExmQmxwOCtqOTBXQ0huYzNPNEY1bit3eDdsckJ3QkFSZGMrVUVDTjZmLzRLSHNSR2l6NkN1QUxwdnJMdXZrZkY3TyttclRmL3JqdGhZZEFPQ21XVy8xMlVBRDFzb05RSzl0ZGEvVmNqSlBEYmdlZ3dyenQ4SWFHc2tOQUxEY3pRK1Jyak41NjZ5a1BnRUE3bFZ0NWxaYlQxbWhBZWg0b3RKeHpTU29PVzFycnFxYTBBQUFJQURBZHBVMzJwWFhWb1FBQUJ2Vm43RDFWemhYWWdENkhxYjNYVGxRVUdJQWdQdDEyVngzV2VjVUFnQVFTZ0NBMVhwdHEzdXRkaVFCQUFnbEFBQ2hCQUJZcCtPSlNzYzFEeUFBQUtFRUFDQ1VBQUNFRWdCZ2hiNkg2WDFYZnB6RUFQejA1eCt6bDdCUjM1VURCU1VHQUlBSEFRQ0lKUUFBb1VJRDBQRXd2ZU9hZ2NwQ0F3Q0FBQUNFeWcxQXJ4T1ZYcXNGV3NnTkFFQzQ2QUIwMlZaM1dTZlFTM1FBZ0xYKy92blgyVXZZcU8vS2o1TWVnUHFiNi9vckJKcEtEOEJEN1FsYmVXMUFkd0lBRUVvQUhoNnFiclJycmdvNkhxWjNYUE1BQXZCVnRXbGJiVDNBK1FqQU4zVm1icDJWQUNjbUFQOVJZZkpXV0FOYzErdEVwZGRxUnhLQTc4MmR2NlkvTUl3QVhEQnJDcHYrTk5KbFc5MWxuVk84bnIyQW9oNW44YisvL1Q3eTRRQkdjZ1Z3elppNWJQclRWUDNOZGYwVnp2WHF6ZHQzczlmUXdFR1hBa1kvSi9ETFAzL05Yc0pscHY5TmpvQVcyZjFFeU9nSHBuTUZzTVhtRXBqN25GTEJpd0RiL3lVRTRGNDNZMkRvazZCVUEwei9oUVFBMkVlUkJwait5M2tYRUxDUENwTzN3aG9hRVFCZ04zUG5yK20vbGdBQWU1bzFoVTMvRGR3REFBNHg3SmFBMGIrWkt3RGdFR1Btc3VsL0QxY0F3TEVPdWhRdyt1OG5BTUFJTzJiQTZOK0xBQUJEYlM2QnViODdBUUNtdVJrRFEvOVFBZ0FReXJ1QUFFSUpBRUFvQVFBSUpRQUFvUVFBSUpRQUFJUVNBSUJRQWdBUVNnQUFRZ2tBUUNnQkFBZ2xBQUNoQkFBZ2xBQUFoQklBZ0ZBQ0FCQktBQUJDQ1FCQUtBRUFDQ1VBQUtFRUFDQ1VBQUNFRWdDQVVBSUFFRW9BQUVJSkFFQW9BUUFJSlFBQW9RUUFJSlFBQUlRU0FJQlFBZ0FRU2dBQVFna0FRQ2dCQUFnbEFBQ2hCQUFnbEFBQWhCSUFnRkFDQUJCS0FBQkNDUUJBS0FFQUNDVUFBS0VFQUNDVUFBQ0VFZ0NBVUFJQUVFb0FBRUlKQUVBb0FRQUlKUUFBb1FRQUlKUUFBSVFTQUlCUUFnQVFTZ0FBUWdrQVFDZ0JBQWdsQUFDaEJBQWdsQUFBaEJJQWdGQUNBQkJLQUFCQ0NRQkFLQUVBQ0NVQUFLRUVBQ0NVQUFDRUVnQ0FVQUlBRUVvQUFFSUpBRUFvQVFBSUpRQUFvUVFBSUpRQUFJUVNBSUJRQWdBUVNnQUFRZ2tBUUNnQkFBZ2xBQUNoQkFBZ2xBQUFoQklBZ0ZBQ0FCQktBQUJDQ1FCQUtBRUFDQ1VBQUtFRUFDQ1VBQUNFRWdDQVVBSUFFRW9BQUVJSkFFQW9BUUFJSlFBQW9RUUFJTlQvQVVnUmIrbkd2WDIyQUFBQUFFbEZUa1N1UW1DQyIsICJzaXplcyI6ICI1MTJ4NTEyIiwgInR5cGUiOiAiaW1hZ2UvcG5nIiwgInB1cnBvc2UiOiAiYW55IG1hc2thYmxlIn1dfQ==">
+<title>セクター相関マップ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap');
+
+  :root{
+    --bg:#080B10;
+    --panel:#0F141B;
+    --panel-2:#141A23;
+    --line:#1E2530;
+    --text:#E7EAEE;
+    --text-dim:#7C8797;
+    --text-faint:#454E5C;
+
+    --c-compute:#4FD6C4;
+    --c-infra:#F4B740;
+    --c-energy:#9FE85A;
+    --c-defense:#F76E7E;
+    --c-emerging:#B98CF5;
+
+    --gold:#F0C34D;
+  }
+
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--text); font-family:'Zen Kaku Gothic New',sans-serif;}
+
+  .mono{font-family:'JetBrains Mono',monospace;}
+
+  .wrap{max-width:920px; margin:0 auto; padding:22px 14px 120px;}
+
+  header{padding:6px 4px 20px; border-bottom:1px solid var(--line); margin-bottom:20px;}
+  .eyebrow{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.18em; color:var(--gold); text-transform:uppercase; margin-bottom:8px;}
+  h1{font-size:22px; font-weight:900; margin:0 0 8px; letter-spacing:.01em;}
+  .sub{font-size:13px; color:var(--text-dim); line-height:1.7; margin:0;}
+
+  .legend{display:flex; flex-wrap:wrap; gap:8px 14px; margin:18px 0 4px; font-family:'JetBrains Mono',monospace; font-size:10.5px;}
+  .legend span{display:inline-flex; align-items:center; gap:6px; color:var(--text-dim);}
+  .dot{width:8px; height:8px; border-radius:50%; display:inline-block;}
+
+  .hint{font-size:11.5px; color:var(--text-faint); font-family:'JetBrains Mono',monospace; margin:14px 2px 4px; display:flex; align-items:center; gap:6px;}
+
+  .meta-block{margin-top:26px;}
+  .meta-title{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; padding-bottom:8px; margin-bottom:14px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:8px;}
+
+  .sector-row{display:grid; grid-template-columns:1fr; gap:10px; margin-bottom:14px;}
+  @media(min-width:640px){ .sector-row{grid-template-columns:1fr 1fr;} }
+
+  .sector-card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px 12px 10px;}
+  .sector-name{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.1em; color:var(--text-dim); margin-bottom:9px; text-transform:uppercase;}
+  .pills{display:flex; flex-wrap:wrap; gap:7px;}
+
+  .pill{
+    position:relative;
+    font-family:'JetBrains Mono',monospace; font-weight:600; font-size:12.5px;
+    background:var(--panel-2); border:1px solid var(--line); color:var(--text);
+    padding:6px 9px; border-radius:7px; cursor:pointer; user-select:none;
+    transition:opacity .25s ease, border-color .2s ease, transform .15s ease, box-shadow .2s ease;
+  }
+  .pill:active{transform:scale(0.96);}
+  .pill .deg{
+    font-size:8.5px; color:var(--text-faint); margin-left:5px; font-weight:500;
+  }
+  .pill.dimmed{opacity:.22;}
+  .pill.selected{
+    border-color:var(--gold); box-shadow:0 0 0 1px var(--gold), 0 0 14px rgba(240,195,77,.35);
+    background:#1C1A10;
+  }
+  .pill.connected{
+    border-color:var(--gold); box-shadow:0 0 0 1px rgba(240,195,77,.5), 0 0 10px rgba(240,195,77,.18);
+  }
+  .pill.connected .deg{color:var(--gold);}
+
+  #panel{
+    position:fixed; left:0; right:0; bottom:0; z-index:20;
+    background:var(--panel); border-top:1px solid var(--gold);
+    max-height:46vh; overflow-y:auto;
+    transform:translateY(100%); transition:transform .28s cubic-bezier(.2,.8,.2,1);
+    box-shadow:0 -12px 30px rgba(0,0,0,.5);
+  }
+  #panel.open{transform:translateY(0%);}
+  .panel-inner{max-width:920px; margin:0 auto; padding:14px 16px 22px;}
+  .panel-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .panel-title{font-family:'JetBrains Mono',monospace; font-size:15px; font-weight:700; display:flex; align-items:center; gap:8px;}
+  .panel-title .badge{font-size:10px; color:var(--bg); background:var(--gold); padding:2px 7px; border-radius:20px; font-weight:700;}
+  .close-btn{background:none; border:1px solid var(--line); color:var(--text-dim); width:28px; height:28px; border-radius:50%; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+
+  .conn-row{display:flex; gap:10px; padding:9px 0; border-bottom:1px solid var(--line);}
+  .conn-row:last-child{border-bottom:none;}
+  .conn-tick{font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13px; color:var(--gold); min-width:56px; flex-shrink:0;}
+  .conn-reason{font-size:12.5px; color:var(--text-dim); line-height:1.5; padding-top:1px;}
+
+  #scrim{position:fixed; inset:0; background:rgba(0,0,0,.4); opacity:0; pointer-events:none; transition:opacity .28s ease; z-index:19;}
+  #scrim.open{opacity:1; pointer-events:auto;}
+
+  footer{margin-top:30px; padding-top:14px; border-top:1px solid var(--line); font-size:11px; color:var(--text-faint); line-height:1.7; font-family:'JetBrains Mono',monospace;}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Watchlist / Sector Overlap</div>
+    <h1>セクター相関マップ</h1>
+    <p class="sub">米国株ウォッチリストの53銘柄・18セクターを5つの大分類で再構成。銘柄をタップすると、材料が波及しうる関連銘柄と、その理由が下から表示されます。</p>
+  </header>
+
+  <div class="legend" id="legend"></div>
+  <div class="hint">▲ TAP A TICKER TO TRACE ITS CONNECTIONS</div>
+
+  <div id="board"></div>
+
+  <footer>
+    ※ 銘柄間の関連性はサプライチェーン・競合関係・テーマ露出などに基づく一般的な整理であり、投資助言ではありません。個別の材料は一次情報での確認を推奨します。
+  </footer>
+</div>
+
+<div id="scrim"></div>
+<div id="panel">
+  <div class="panel-inner">
+    <div class="panel-head">
+      <div class="panel-title"><span id="panelTicker"></span><span class="badge" id="panelCount"></span></div>
+      <button class="close-btn" id="closeBtn">✕</button>
+    </div>
+    <div id="panelList"></div>
+  </div>
+</div>
+
+<script>
+const META = {
+  compute:  { label:'COMPUTE & CHIPS',      color:'var(--c-compute)' },
+  infra:    { label:'AI INFRASTRUCTURE',    color:'var(--c-infra)'   },
+  energy:   { label:'ENERGY & MATERIALS',   color:'var(--c-energy)'  },
+  defense:  { label:'DEFENSE & AEROSPACE',  color:'var(--c-defense)' },
+  emerging: { label:'EMERGING TECH',        color:'var(--c-emerging)'},
+};
+
+const SECTORS = [
+  {key:'SEMIS', meta:'compute', tickers:['NVDA','AMD','ARM','INTC','TSM']},
+  {key:'MEMORY', meta:'compute', tickers:['MU','SNDK','WDC']},
+  {key:'NETWORKING', meta:'compute', tickers:['AVGO','MRVL','CRDO','ANET']},
+  {key:'PHOTONICS', meta:'compute', tickers:['AAOI','LITE','COHR','NVTS','GLW']},
+  {key:'SEMI EQUIPMENT', meta:'compute', tickers:['ASML','AMAT','LRCX','KLAC']},
+
+  {key:'INFRASTRUCTURE', meta:'infra', tickers:['DELL','SMCI','VRT','ETN','PENG']},
+  {key:'DATA CENTERS', meta:'infra', tickers:['IREN','CORZ','CIFR','HIVE','APLD','NBIS','WULF','MARA','CRWV']},
+  {key:'SOFTWARE', meta:'infra', tickers:['MSFT','NOW','SNOW','MDB','CRM']},
+
+  {key:'NUCLEAR', meta:'energy', tickers:['OKLO','LEU','UUUU','CCJ']},
+  {key:'POWER', meta:'energy', tickers:['CEG','VST','BE','TLN','BW']},
+  {key:'COPPER', meta:'energy', tickers:['FCX','SCCO','TECK']},
+
+  {key:'DEFENSE', meta:'defense', tickers:['PLTR','KTOS','AVAV','RCAT','LMT']},
+  {key:'DRONES', meta:'defense', tickers:['ONDS','DPRO','UMAC']},
+  {key:'SPACE', meta:'defense', tickers:['ASTS','RKLB','RDW','LUNR','SPCX']},
+  {key:'ROBOTICS', meta:'defense', tickers:['OUST','SYM','ISRG','TSLA']},
+  {key:'eVTOL', meta:'defense', tickers:['JOBY','ACHR']},
+
+  {key:'QUANTUM', meta:'emerging', tickers:['IONQ','QBTS','RGTI']},
+  {key:'FINTECH', meta:'emerging', tickers:['HOOD','SOFI','AFRM','COIN']},
+];
+
+const EDGES = [
+  ['APLD','CEG','データセンターの電力需要を賄う電力会社'],
+  ['APLD','OKLO','次世代原子力によるデータセンター向け電源構想'],
+  ['APLD','NVDA','AI/HPC向けGPU調達先'],
+  ['IREN','VST','マイニングからAI転換組の電力調達先'],
+  ['CIFR','BE','燃料電池による分散電源の活用先'],
+  ['HIVE','CEG','データセンター拡張に伴う電力契約'],
+  ['GLW','AVGO','光インターコネクトのサプライチェーン'],
+  ['COHR','MRVL','光通信部品と光電変換ICの連携'],
+  ['LITE','CRDO','光トランシーバー部品の供給関係'],
+  ['AAOI','ANET','光モジュールとスイッチ機器の連携'],
+  ['NVTS','AVGO','データセンター向け電源半導体の供給'],
+  ['ASML','TSM','最先端EUV露光装置の主要顧客'],
+  ['AMAT','INTC','半導体製造装置の主要顧客'],
+  ['LRCX','MU','メモリファブ向け装置の供給関係'],
+  ['KLAC','NVDA','先端プロセス検査装置と川下顧客'],
+  ['DELL','NVDA','AIサーバーへのGPU組み込み'],
+  ['SMCI','NVDA','AIサーバー筐体へのGPU組み込み'],
+  ['VRT','CEG','データセンター冷却インフラと電力需要'],
+  ['ETN','VRT','電力管理機器の周辺サプライチェーン'],
+  ['MSFT','NVDA','クラウドAI向け大口GPU調達'],
+  ['PLTR','LMT','防衛ソフトウェアとプライム受注企業'],
+  ['KTOS','AVAV','無人機・防衛システムの競合/協業'],
+  ['AVAV','RCAT','ドローン防衛技術の重複領域'],
+  ['RCAT','ONDS','対ドローン・小型無人機技術'],
+  ['LMT','RDW','防衛と宇宙インフラの重複'],
+  ['ASTS','RKLB','衛星通信と打上げ関連の連携'],
+  ['RKLB','LUNR','宇宙輸送・月面ミッション関連'],
+  ['OKLO','LEU','次世代炉と濃縮ウラン燃料の供給網'],
+  ['LEU','UUUU','ウラン濃縮とウラン生産の連携'],
+  ['UUUU','CCJ','ウラン採掘企業同士の競合/協業'],
+  ['CCJ','CEG','原子力燃料供給と電力会社'],
+  ['CEG','VST','電力事業者同士の競合/協業'],
+  ['VST','BE','発電と燃料電池分散電源の連携'],
+  ['BE','TLN','発電関連企業の重複領域'],
+  ['HOOD','SOFI','フィンテックプラットフォームの競合'],
+  ['SOFI','AFRM','個人向け金融・BNPLの競合領域'],
+  ['FCX','SCCO','銅鉱山メジャー同士の競合'],
+  ['SCCO','TECK','銅・鉱業セクターの競合'],
+  ['FCX','VRT','データセンター電化に伴う銅需要'],
+  ['JOBY','ACHR','eVTOL(空飛ぶクルマ)の直接競合'],
+  ['OUST','RCAT','LiDARとドローン技術の連携'],
+  ['SYM','ISRG','産業・医療ロボティクスの重複領域'],
+  ['IONQ','QBTS','量子コンピューティング企業の競合'],
+  ['QBTS','RGTI','量子コンピューティング企業の競合'],
+  ['SNOW','MDB','データ基盤ソフトウェアの競合'],
+  ['CRM','NOW','エンタープライズSaaSの競合'],
+
+  ['WULF','MARA','ビットコインマイニングからAI/HPC転換組の競合'],
+  ['WULF','CEG','AIデータセンター向け電源契約'],
+  ['MARA','CEG','電力コスト構造が収益を左右する共通テーマ'],
+  ['CRWV','NVDA','GPUクラウドの主要仕入れ先'],
+  ['CRWV','MSFT','クラウドAIインフラでの競合/パートナー関係'],
+  ['CRWV','GLW','AIクラウド向け光インターコネクトの供給'],
+  ['CRWV','LITE','AIクラウド向け光トランシーバーの供給'],
+  ['CRWV','CRDO','AIクラウド向け高速接続チップの供給'],
+  ['PENG','DELL','AIサーバー・HPC分野での競合'],
+  ['PENG','SMCI','AIサーバー・HPC分野での競合'],
+  ['PENG','MU','メモリモジュール事業の重複'],
+  ['PENG','AMAT','半導体製造装置とメモリ事業の川上川下関係'],
+  ['BW','CEG','AIデータセンター向け発電インフラの供給'],
+  ['BW','OKLO','次世代原子力・発電技術での重複領域'],
+  ['COIN','HOOD','個人向け取引プラットフォームの競合'],
+  ['COIN','MARA','暗号資産関連ビジネスとしての連携'],
+  ['SPCX','ASTS','衛星通信インフラでの競合/協業'],
+  ['SPCX','RKLB','ロケット打上げサービスの直接競合'],
+  ['SPCX','LMT','政府・防衛向け宇宙契約での競合/協業'],
+  ['SPCX','TSLA','イーロン・マスク関連企業としての資金・話題連動'],
+];
+
+// build adjacency
+const adj = {};
+EDGES.forEach(([a,b,reason])=>{
+  (adj[a] = adj[a]||[]).push({t:b, reason});
+  (adj[b] = adj[b]||[]).push({t:a, reason});
+});
+
+const legendEl = document.getElementById('legend');
+Object.values(META).forEach(m=>{
+  const s = document.createElement('span');
+  s.innerHTML = `<span class="dot" style="background:${m.color}"></span>${m.label}`;
+  legendEl.appendChild(s);
+});
+
+const board = document.getElementById('board');
+Object.entries(META).forEach(([metaKey, metaInfo])=>{
+  const block = document.createElement('div');
+  block.className = 'meta-block';
+  block.innerHTML = `<div class="meta-title" style="color:${metaInfo.color}">
+      <span class="dot" style="background:${metaInfo.color}"></span>${metaInfo.label}
+    </div>`;
+  const row = document.createElement('div');
+  row.className = 'sector-row';
+
+  SECTORS.filter(s=>s.meta===metaKey).forEach(sector=>{
+    const card = document.createElement('div');
+    card.className = 'sector-card';
+    card.innerHTML = `<div class="sector-name">${sector.key}</div>`;
+    const pills = document.createElement('div');
+    pills.className = 'pills';
+    sector.tickers.forEach(t=>{
+      const deg = (adj[t]||[]).length;
+      const pill = document.createElement('div');
+      pill.className = 'pill';
+      pill.dataset.ticker = t;
+      pill.innerHTML = `${t}${deg? `<span class="deg">${deg}</span>`:''}`;
+      pill.addEventListener('click', ()=>selectTicker(t));
+      pills.appendChild(pill);
+    });
+    card.appendChild(pills);
+    row.appendChild(card);
+  });
+
+  block.appendChild(row);
+  board.appendChild(block);
+});
+
+const allPills = ()=>document.querySelectorAll('.pill');
+const panel = document.getElementById('panel');
+const scrim = document.getElementById('scrim');
+const panelTicker = document.getElementById('panelTicker');
+const panelCount = document.getElementById('panelCount');
+const panelList = document.getElementById('panelList');
+
+let currentSelected = null;
+
+function selectTicker(t){
+  if(currentSelected === t){ closePanel(); return; }
+  currentSelected = t;
+  const connections = adj[t] || [];
+  const connectedSet = new Set(connections.map(c=>c.t));
+
+  allPills().forEach(p=>{
+    p.classList.remove('selected','connected','dimmed');
+    const pt = p.dataset.ticker;
+    if(pt === t) p.classList.add('selected');
+    else if(connectedSet.has(pt)) p.classList.add('connected');
+    else p.classList.add('dimmed');
+  });
+
+  panelTicker.textContent = t;
+  panelCount.textContent = connections.length ? `${connections.length} 件の関連` : '関連銘柄なし';
+  panelList.innerHTML = '';
+  if(connections.length === 0){
+    panelList.innerHTML = `<div class="conn-reason" style="padding:10px 0;">今回のマップ上では直接の重複テーマは登録されていません。</div>`;
+  } else {
+    connections.forEach(c=>{
+      const row = document.createElement('div');
+      row.className = 'conn-row';
+      row.innerHTML = `<div class="conn-tick">${c.t}</div><div class="conn-reason">${c.reason}</div>`;
+      panelList.appendChild(row);
+    });
+  }
+
+  panel.classList.add('open');
+  scrim.classList.add('open');
+}
+
+function closePanel(){
+  currentSelected = null;
+  allPills().forEach(p=>p.classList.remove('selected','connected','dimmed'));
+  panel.classList.remove('open');
+  scrim.classList.remove('open');
+}
+
+document.getElementById('closeBtn').addEventListener('click', closePanel);
+scrim.addEventListener('click', closePanel);
+</script>
+
+</body>
+</html>
