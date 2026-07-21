@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>一目均衡表 乖離率チェッカー</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #141720;
+    --border: #1e2330;
+    --text: #c8cfe0;
+    --muted: #4a5268;
+    --cloud-up: #e05c5c;
+    --cloud-down: #4ec9b0;
+    --gold: #e8c84a;
+    --accent: #7b9cff;
+    --kijun: #a78bfa;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .container { width: 100%; max-width: 480px; }
+
+  h1 {
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    margin-bottom: 32px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    padding-left: 2px;
+  }
+
+  .inputs { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+
+  .field {
+    display: flex;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    gap: 12px;
+    transition: border-color 0.2s;
+  }
+
+  .field:focus-within { border-color: var(--accent); }
+  .field.kijun-field:focus-within { border-color: var(--kijun); }
+
+  .field label {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    white-space: nowrap;
+    min-width: 110px;
+  }
+
+  .field input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    width: 100%;
+    text-align: right;
+  }
+
+  .field input::placeholder { color: var(--muted); font-weight: 400; }
+
+  .divider { height: 1px; background: var(--border); margin: 8px 0 24px; }
+  .section-divider { height: 1px; background: var(--border); margin: 20px 0 20px; }
+
+  .results { display: flex; flex-direction: column; gap: 10px; }
+
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .result-card.kijun-card { border-color: rgba(167,139,250,0.2); }
+
+  .result-label { font-size: 11px; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
+
+  .result-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .positive { color: var(--cloud-up); }
+  .negative { color: var(--cloud-down); }
+  .neutral  { color: var(--muted); }
+  .kijun-color { color: var(--kijun); }
+
+  .status-bar {
+    margin-top: 20px;
+    border-radius: 10px;
+    padding: 18px 20px;
+    border: 1px solid;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .status-bar.above  { background: rgba(224,92,92,0.07);  border-color: rgba(224,92,92,0.3); }
+  .status-bar.below  { background: rgba(78,201,176,0.07); border-color: rgba(78,201,176,0.3); }
+  .status-bar.inside { background: rgba(232,200,74,0.06); border-color: rgba(232,200,74,0.3); }
+  .status-bar.empty  { background: var(--surface);         border-color: var(--border); }
+
+  .status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .above  .status-dot { background: var(--cloud-up);   box-shadow: 0 0 6px var(--cloud-up); }
+  .below  .status-dot { background: var(--cloud-down); box-shadow: 0 0 6px var(--cloud-down); }
+  .inside .status-dot { background: var(--gold);        box-shadow: 0 0 6px var(--gold); }
+  .empty  .status-dot { background: var(--muted); }
+
+  .status-text { font-size: 13px; letter-spacing: 0.04em; }
+  .above  .status-text { color: var(--cloud-up); }
+  .below  .status-text { color: var(--cloud-down); }
+  .inside .status-text { color: var(--gold); }
+  .empty  .status-text { color: var(--muted); }
+
+  .kijun-status {
+    margin-top: 10px;
+    border-radius: 10px;
+    padding: 14px 20px;
+    border: 1px solid rgba(167,139,250,0.25);
+    background: rgba(167,139,250,0.05);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .kijun-status.empty-k { background: var(--surface); border-color: var(--border); }
+
+  .kijun-status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: var(--kijun); box-shadow: 0 0 6px var(--kijun); }
+  .empty-k .kijun-status-dot { background: var(--muted); box-shadow: none; }
+
+  .kijun-status-text { font-size: 12px; color: var(--kijun); letter-spacing: 0.04em; }
+  .empty-k .kijun-status-text { color: var(--muted); }
+
+  .cloud-range {
+    margin-top: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    letter-spacing: 0.06em;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>ICHIMOKU</h1>
+  <div class="subtitle">雲・基準線との乖離率</div>
+
+  <div class="section-label">入力</div>
+  <div class="inputs">
+    <div class="field">
+      <label>終値（現在値）</label>
+      <input type="number" id="close" placeholder="0.00" step="any" oninput="calc()">
+    </div>
+    <div class="field">
+      <label>先行スパン1</label>
+      <input type="number" id="span1" placeholder="0.00" step="any" oninput="calc()">
+    </div>
+    <div class="field">
+      <label>先行スパン2</label>
+      <input type="number" id="span2" placeholder="0.00" step="any" oninput="calc()">
+    </div>
+    <div class="field kijun-field">
+      <label>基準線</label>
+      <input type="number" id="kijun" placeholder="0.00" step="any" oninput="calc()">
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="section-label">雲との乖離率</div>
+  <div class="results">
+    <div class="result-card">
+      <div class="result-label">雲の上限との乖離</div>
+      <div class="result-value neutral" id="diffTop">—</div>
+    </div>
+    <div class="result-card">
+      <div class="result-label">雲の下限との乖離</div>
+      <div class="result-value neutral" id="diffBottom">—</div>
+    </div>
+    <div class="result-card">
+      <div class="result-label">雲の中心との乖離</div>
+      <div class="result-value neutral" id="diffMid">—</div>
+    </div>
+  </div>
+
+  <div class="status-bar empty" id="statusBar">
+    <div class="status-dot"></div>
+    <div class="status-text" id="statusText">数値を入力してください</div>
+  </div>
+
+  <div class="cloud-range" id="cloudRange"></div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">基準線との乖離率</div>
+  <div class="results">
+    <div class="result-card kijun-card">
+      <div class="result-label">基準線との乖離</div>
+      <div class="result-value neutral" id="diffKijun">—</div>
+    </div>
+  </div>
+
+  <div class="kijun-status empty-k" id="kijunStatus">
+    <div class="kijun-status-dot"></div>
+    <div class="kijun-status-text" id="kijunText">基準線を入力してください</div>
+  </div>
+
+</div>
+
+<script>
+function calc() {
+  const close = parseFloat(document.getElementById('close').value);
+  const s1    = parseFloat(document.getElementById('span1').value);
+  const s2    = parseFloat(document.getElementById('span2').value);
+  const kijun = parseFloat(document.getElementById('kijun').value);
+
+  const fmt = (v) => (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
+  const cls = (v) => 'result-value ' + (Math.abs(v) < 0.001 ? 'neutral' : v > 0 ? 'positive' : 'negative');
+
+  // 雲
+  const top    = document.getElementById('diffTop');
+  const bottom = document.getElementById('diffBottom');
+  const mid    = document.getElementById('diffMid');
+  const bar    = document.getElementById('statusBar');
+  const stText = document.getElementById('statusText');
+  const range  = document.getElementById('cloudRange');
+
+  if (!isNaN(close) && !isNaN(s1) && !isNaN(s2)) {
+    const cloudTop    = Math.max(s1, s2);
+    const cloudBottom = Math.min(s1, s2);
+    const cloudMid    = (cloudTop + cloudBottom) / 2;
+
+    const dTop    = ((close - cloudTop)    / cloudTop)    * 100;
+    const dBottom = ((close - cloudBottom) / cloudBottom) * 100;
+    const dMid    = ((close - cloudMid)    / cloudMid)    * 100;
+
+    top.textContent    = fmt(dTop);    top.className    = cls(dTop);
+    bottom.textContent = fmt(dBottom); bottom.className = cls(dBottom);
+    mid.textContent    = fmt(dMid);    mid.className    = cls(dMid);
+    range.textContent  = `雲: ${cloudBottom.toLocaleString()} ～ ${cloudTop.toLocaleString()}`;
+
+    if (close > cloudTop) {
+      bar.className = 'status-bar above';
+      stText.textContent = '▲ 雲の上方（陽転） — 上限から ' + fmt(dTop);
+    } else if (close < cloudBottom) {
+      bar.className = 'status-bar below';
+      stText.textContent = '▼ 雲の下方（陰転） — 下限から ' + fmt(dBottom);
+    } else {
+      bar.className = 'status-bar inside';
+      stText.textContent = '◆ 雲の中（もみ合い・転換帯）';
+    }
+  } else {
+    [top, bottom, mid].forEach(el => { el.textContent = '—'; el.className = 'result-value neutral'; });
+    bar.className = 'status-bar empty';
+    stText.textContent = '数値を入力してください';
+    range.textContent = '';
+  }
+
+  // 基準線
+  const dkEl  = document.getElementById('diffKijun');
+  const kSt   = document.getElementById('kijunStatus');
+  const kTxt  = document.getElementById('kijunText');
+
+  if (!isNaN(close) && !isNaN(kijun)) {
+    const dk = ((close - kijun) / kijun) * 100;
+    dkEl.textContent = fmt(dk);
+    dkEl.className = 'result-value ' + (Math.abs(dk) < 0.001 ? 'kijun-color' : dk > 0 ? 'positive' : 'negative');
+    kSt.className = 'kijun-status';
+    kTxt.textContent = dk > 0
+      ? `▲ 基準線の上方 ${fmt(dk)}（強気サイン）`
+      : dk < 0
+      ? `▼ 基準線の下方 ${fmt(dk)}（弱気サイン）`
+      : `◆ 基準線と一致`;
+  } else {
+    dkEl.textContent = '—'; dkEl.className = 'result-value neutral';
+    kSt.className = 'kijun-status empty-k';
+    kTxt.textContent = '基準線を入力してください';
+  }
+}
+</script>
+</body>
+</html>
