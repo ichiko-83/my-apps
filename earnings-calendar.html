@@ -128,6 +128,16 @@
     filter: invert(0.8);
     cursor: pointer;
   }
+  .date-select-group { display: flex; gap: 4px; margin-top: 4px; }
+  .date-select-group.form-size { margin-top: 0; }
+  select.date-part {
+    background: var(--bg); border: 1px solid var(--border-strong); border-radius: 4px;
+    color: var(--text); font-size: 12px; padding: 4px 4px; font-family: inherit;
+    -webkit-appearance: menulist; appearance: menulist;
+  }
+  .date-select-group.form-size select.date-part { font-size: 14px; padding: 7px 4px; }
+  select.date-part.year { width: 72px; }
+  select.date-part.month, select.date-part.day { width: 52px; }
   .days-left { font-size: 12px; font-family: monospace; flex-shrink: 0; }
   .btn-remove {
     background: none; border: none; color: var(--dim); cursor: pointer; flex-shrink: 0;
@@ -175,7 +185,7 @@
       </div>
       <div class="field">
         <label>決算日（任意）</label>
-        <input id="fDate" type="date">
+        <div id="fDateWrap"></div>
       </div>
       <div class="field">
         <label>タイミング</label>
@@ -229,6 +239,63 @@ let sectorFilter = "all";
 let collapsed = { past: true };
 let editingDateId = null;
 let formConfirmed = false;
+let formDate = "";
+
+function createDateSelects(initialValue, onChange, isFormSize) {
+  const wrap = document.createElement("div");
+  wrap.className = "date-select-group" + (isFormSize ? " form-size" : "");
+
+  const yearSel = document.createElement("select");
+  yearSel.className = "date-part year";
+  const monthSel = document.createElement("select");
+  monthSel.className = "date-part month";
+  const daySel = document.createElement("select");
+  daySel.className = "date-part day";
+
+  const addOpt = (sel, value, label) => {
+    const o = document.createElement("option");
+    o.value = value; o.textContent = label;
+    sel.appendChild(o);
+  };
+  const curYear = new Date().getFullYear();
+  addOpt(yearSel, "", "年");
+  for (let y = curYear - 1; y <= curYear + 2; y++) addOpt(yearSel, String(y), String(y) + "年");
+  addOpt(monthSel, "", "月");
+  for (let m = 1; m <= 12; m++) addOpt(monthSel, String(m), String(m) + "月");
+  addOpt(daySel, "", "日");
+  for (let d = 1; d <= 31; d++) addOpt(daySel, String(d), String(d) + "日");
+
+  if (initialValue) {
+    const [y, m, d] = initialValue.split("-");
+    yearSel.value = String(parseInt(y, 10));
+    monthSel.value = String(parseInt(m, 10));
+    daySel.value = String(parseInt(d, 10));
+  }
+
+  const emit = () => {
+    if (yearSel.value && monthSel.value && daySel.value) {
+      const m = monthSel.value.padStart(2, "0");
+      const d = daySel.value.padStart(2, "0");
+      onChange(`${yearSel.value}-${m}-${d}`);
+    } else {
+      onChange("");
+    }
+  };
+  yearSel.onchange = emit;
+  monthSel.onchange = emit;
+  daySel.onchange = emit;
+
+  wrap.appendChild(yearSel);
+  wrap.appendChild(monthSel);
+  wrap.appendChild(daySel);
+  return wrap;
+}
+
+function renderFormDateSelects() {
+  const wrap = document.getElementById("fDateWrap");
+  wrap.innerHTML = "";
+  wrap.appendChild(createDateSelects(formDate, (v) => { formDate = v; }, true));
+}
 
 function uid() { return Math.random().toString(36).slice(2, 10); }
 function sectorMeta(id) { return SECTORS.find(s => s.id === id) || SECTORS[SECTORS.length - 1]; }
@@ -332,15 +399,23 @@ function renderRow(e, isUndated) {
 
     main.appendChild(line);
   } else {
-    const input = document.createElement("input");
-    input.type = "date";
-    input.className = "date-input";
-    input.value = e.date || "";
-    input.onchange = (ev) => { e.date = ev.target.value; save(); };
-    input.onblur = () => { editingDateId = null; renderAll(); };
-    input.onclick = () => { if (input.showPicker) { try { input.showPicker(); } catch (err) {} } };
-    main.appendChild(input);
-    if (isUndated) setTimeout(() => input.focus(), 0);
+    const selects = createDateSelects(e.date, (v) => {
+      if (v) {
+        e.date = v;
+        if (!isUndated) editingDateId = null;
+        save();
+        renderAll();
+      }
+    }, false);
+    main.appendChild(selects);
+    if (!isUndated && e.date) {
+      const cancel = document.createElement("button");
+      cancel.className = "date-link";
+      cancel.style.marginTop = "4px";
+      cancel.textContent = "キャンセル";
+      cancel.onclick = () => { editingDateId = null; renderAll(); };
+      main.appendChild(cancel);
+    }
   }
 
   row.appendChild(main);
@@ -421,7 +496,8 @@ function renderAll() {
 function resetForm() {
   document.getElementById("fTicker").value = "";
   document.getElementById("fSector").value = "ai";
-  document.getElementById("fDate").value = "";
+  formDate = "";
+  renderFormDateSelects();
   document.getElementById("fSession").value = "unknown";
   document.getElementById("fNotes").value = "";
   formConfirmed = false;
@@ -438,9 +514,6 @@ document.getElementById("btnCloseForm").onclick = () => document.getElementById(
 document.getElementById("fTicker").oninput = (e) => {
   document.getElementById("btnAdd").disabled = !e.target.value.trim();
 };
-document.getElementById("fDate").onclick = function() {
-  if (this.showPicker) { try { this.showPicker(); } catch (err) {} }
-};
 document.getElementById("fEstBtn").onclick = () => { formConfirmed = false; updateStatusButtons(); };
 document.getElementById("fConfBtn").onclick = () => { formConfirmed = true; updateStatusButtons(); };
 document.getElementById("btnAdd").onclick = () => {
@@ -450,7 +523,7 @@ document.getElementById("btnAdd").onclick = () => {
     id: uid(),
     ticker,
     sector: document.getElementById("fSector").value,
-    date: document.getElementById("fDate").value,
+    date: formDate,
     session: document.getElementById("fSession").value,
     notes: document.getElementById("fNotes").value.trim(),
     confirmed: formConfirmed,
@@ -462,6 +535,7 @@ document.getElementById("btnAdd").onclick = () => {
 };
 
 populateSectorSelect();
+renderFormDateSelects();
 load();
 renderAll();
 </script>
