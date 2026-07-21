@@ -1,0 +1,387 @@
+import React, { useState, useEffect, useMemo } from "react";
+import { Plus, Trash2, X, Wheat, Sprout } from "lucide-react";
+
+const STORAGE_KEY = "earnings-calendar-entries";
+
+const SECTORS = [
+  { id: "ai", label: "AIインフラ", color: "#C9A227" },
+  { id: "semi", label: "半導体", color: "#5B8FB0" },
+  { id: "energy", label: "エネルギー", color: "#D9744D" },
+  { id: "defense", label: "防衛", color: "#8A93A6" },
+  { id: "agri", label: "農業/資源", color: "#6B9080" },
+  { id: "other", label: "その他", color: "#8C7FB0" },
+];
+
+const SEED = [
+  { ticker: "WULF", sector: "ai" },
+  { ticker: "APLD", sector: "ai" },
+  { ticker: "BW", sector: "energy" },
+  { ticker: "GLW", sector: "ai" },
+  { ticker: "COHR", sector: "semi" },
+  { ticker: "CEG", sector: "energy" },
+  { ticker: "AGRO", sector: "agri" },
+];
+
+function sectorMeta(id) {
+  return SECTORS.find((s) => s.id === id) || SECTORS[SECTORS.length - 1];
+}
+
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(dateStr + "T00:00:00");
+  return Math.round((target - today) / 86400000);
+}
+
+function fmtDate(dateStr) {
+  const d = new Date(dateStr + "T00:00:00");
+  return `${d.getMonth() + 1}/${d.getDate()}（${"日月火水木金土"[d.getDay()]}）`;
+}
+
+function uid() {
+  return Math.random().toString(36).slice(2, 10);
+}
+
+export default function EarningsCalendar() {
+  const [entries, setEntries] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const [form, setForm] = useState({ ticker: "", sector: "ai", date: "", session: "unknown", notes: "" });
+  const [sectorFilter, setSectorFilter] = useState("all");
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await window.storage.get(STORAGE_KEY, false);
+        if (res && res.value) {
+          setEntries(JSON.parse(res.value));
+        } else {
+          const seeded = SEED.map((s) => ({
+            id: uid(),
+            ticker: s.ticker,
+            sector: s.sector,
+            date: "",
+            session: "unknown",
+            notes: "",
+          }));
+          setEntries(seeded);
+          await window.storage.set(STORAGE_KEY, JSON.stringify(seeded), false);
+        }
+      } catch (e) {
+        setEntries(
+          SEED.map((s) => ({ id: uid(), ticker: s.ticker, sector: s.sector, date: "", session: "unknown", notes: "" }))
+        );
+        setError("保存データの読み込みに失敗しました。この端末では変更が保存されない可能性があります。");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  async function persist(next) {
+    setEntries(next);
+    try {
+      const res = await window.storage.set(STORAGE_KEY, JSON.stringify(next), false);
+      if (!res) setError("保存に失敗しました。もう一度試してください。");
+      else setError(null);
+    } catch (e) {
+      setError("保存に失敗しました。もう一度試してください。");
+    }
+  }
+
+  function addEntry() {
+    if (!form.ticker.trim()) return;
+    const next = [
+      ...entries,
+      {
+        id: uid(),
+        ticker: form.ticker.trim().toUpperCase(),
+        sector: form.sector,
+        date: form.date,
+        session: form.session,
+        notes: form.notes.trim(),
+      },
+    ];
+    persist(next);
+    setForm({ ticker: "", sector: "ai", date: "", session: "unknown", notes: "" });
+    setShowAdd(false);
+  }
+
+  function updateEntry(id, patch) {
+    const next = entries.map((e) => (e.id === id ? { ...e, ...patch } : e));
+    persist(next);
+  }
+
+  function removeEntry(id) {
+    const next = entries.filter((e) => e.id !== id);
+    persist(next);
+  }
+
+  const grouped = useMemo(() => {
+    if (!entries) return null;
+    const filtered = sectorFilter === "all" ? entries : entries.filter((e) => e.sector === sectorFilter);
+    const withDate = filtered.filter((e) => e.date).sort((a, b) => a.date.localeCompare(b.date));
+    const noDate = filtered.filter((e) => !e.date).sort((a, b) => a.ticker.localeCompare(b.ticker));
+
+    const soon = [];
+    const month = [];
+    const later = [];
+    const past = [];
+    withDate.forEach((e) => {
+      const d = daysUntil(e.date);
+      if (d < 0) past.push(e);
+      else if (d <= 7) soon.push(e);
+      else if (d <= 30) month.push(e);
+      else later.push(e);
+    });
+    return { soon, month, later, past, noDate };
+  }, [entries, sectorFilter]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0B1220] flex items-center justify-center">
+        <p className="text-[#7C8699] font-mono text-sm">読み込み中…</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#0B1220] text-[#E8E6DF]">
+      <div className="max-w-2xl mx-auto px-5 pt-8 pb-24">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-1">
+          <div>
+            <div className="flex items-center gap-2 text-[#C9A227] mb-1">
+              <Wheat size={18} strokeWidth={1.75} />
+              <span className="text-xs tracking-[0.2em] font-mono uppercase">Earnings Harvest</span>
+            </div>
+            <h1 className="text-2xl font-serif tracking-tight">決算カレンダー</h1>
+          </div>
+          <button
+            onClick={() => setShowAdd(true)}
+            className="mt-1 flex items-center gap-1.5 bg-[#C9A227] text-[#0B1220] px-3 py-2 rounded-md text-sm font-medium hover:bg-[#DDB53A] transition-colors"
+          >
+            <Plus size={16} strokeWidth={2.5} />
+            銘柄を追加
+          </button>
+        </div>
+        <p className="text-[#7C8699] text-sm mb-6">
+          収穫のように、決算シーズンの実りどきを見逃さないための一覧です
+        </p>
+
+        {error && (
+          <div className="mb-4 text-xs text-[#D9744D] bg-[#D9744D]/10 border border-[#D9744D]/30 rounded-md px-3 py-2">
+            {error}
+          </div>
+        )}
+
+        {/* Sector filter */}
+        <div className="flex flex-wrap gap-2 mb-8">
+          <button
+            onClick={() => setSectorFilter("all")}
+            className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+              sectorFilter === "all"
+                ? "border-[#E8E6DF] text-[#E8E6DF]"
+                : "border-[#2A3244] text-[#7C8699] hover:border-[#3A4458]"
+            }`}
+          >
+            すべて
+          </button>
+          {SECTORS.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => setSectorFilter(s.id)}
+              className="text-xs px-2.5 py-1 rounded-full border transition-colors"
+              style={{
+                borderColor: sectorFilter === s.id ? s.color : "#2A3244",
+                color: sectorFilter === s.id ? s.color : "#7C8699",
+              }}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Add form */}
+        {showAdd && (
+          <div className="mb-8 bg-[#131B2E] border border-[#2A3244] rounded-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium">新しい銘柄を追加</span>
+              <button onClick={() => setShowAdd(false)} className="text-[#7C8699] hover:text-[#E8E6DF]">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div>
+                <label className="text-xs text-[#7C8699] block mb-1">ティッカー</label>
+                <input
+                  value={form.ticker}
+                  onChange={(e) => setForm({ ...form, ticker: e.target.value })}
+                  placeholder="例：MARA"
+                  className="w-full bg-[#0B1220] border border-[#2A3244] rounded px-2.5 py-1.5 text-sm font-mono uppercase focus:outline-none focus:border-[#C9A227]"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-[#7C8699] block mb-1">セクター</label>
+                <select
+                  value={form.sector}
+                  onChange={(e) => setForm({ ...form, sector: e.target.value })}
+                  className="w-full bg-[#0B1220] border border-[#2A3244] rounded px-2.5 py-1.5 text-sm focus:outline-none focus:border-[#C9A227]"
+                >
+                  {SECTORS.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-[#7C8699] block mb-1">決算日（任意）</label>
+                <input
+                  type="date"
+                  value={form.date}
+                  onChange={(e) => setForm({ ...form, date: e.target.value })}
+                  className="w-full bg-[#0B1220] border border-[#2A3244] rounded px-2.5 py-1.5 text-sm focus:outline-none focus:border-[#C9A227]"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-[#7C8699] block mb-1">タイミング</label>
+                <select
+                  value={form.session}
+                  onChange={(e) => setForm({ ...form, session: e.target.value })}
+                  className="w-full bg-[#0B1220] border border-[#2A3244] rounded px-2.5 py-1.5 text-sm focus:outline-none focus:border-[#C9A227]"
+                >
+                  <option value="unknown">未定</option>
+                  <option value="bmo">寄り付き前（BMO）</option>
+                  <option value="amc">引け後（AMC）</option>
+                </select>
+              </div>
+            </div>
+            <div className="mb-3">
+              <label className="text-xs text-[#7C8699] block mb-1">メモ（任意）</label>
+              <input
+                value={form.notes}
+                onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                placeholder="例：ガイダンス注目"
+                className="w-full bg-[#0B1220] border border-[#2A3244] rounded px-2.5 py-1.5 text-sm focus:outline-none focus:border-[#C9A227]"
+              />
+            </div>
+            <button
+              onClick={addEntry}
+              disabled={!form.ticker.trim()}
+              className="w-full bg-[#C9A227] disabled:bg-[#3A4458] disabled:text-[#7C8699] text-[#0B1220] rounded py-2 text-sm font-medium hover:bg-[#DDB53A] transition-colors"
+            >
+              追加する
+            </button>
+          </div>
+        )}
+
+        {/* Sections */}
+        {grouped && (
+          <div className="space-y-8">
+            <Section title="今週中" tone="urgent" items={grouped.soon} onUpdate={updateEntry} onRemove={removeEntry} />
+            <Section title="今月中" tone="normal" items={grouped.month} onUpdate={updateEntry} onRemove={removeEntry} />
+            <Section title="それ以降" tone="quiet" items={grouped.later} onUpdate={updateEntry} onRemove={removeEntry} />
+            <Section title="日付未登録" tone="quiet" items={grouped.noDate} onUpdate={updateEntry} onRemove={removeEntry} isUndated />
+            {grouped.past.length > 0 && (
+              <Section title="過去の決算" tone="past" items={grouped.past} onUpdate={updateEntry} onRemove={removeEntry} collapsedByDefault />
+            )}
+          </div>
+        )}
+
+        {entries && entries.length === 0 && (
+          <div className="text-center py-16 text-[#7C8699]">
+            <Sprout size={28} className="mx-auto mb-3 opacity-50" strokeWidth={1.5} />
+            <p className="text-sm">まだ銘柄が登録されていません。右上から追加してください。</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Section({ title, tone, items, onUpdate, onRemove, isUndated, collapsedByDefault }) {
+  const [collapsed, setCollapsed] = useState(!!collapsedByDefault);
+  if (!items || items.length === 0) return null;
+
+  const toneColor = { urgent: "#D9744D", normal: "#C9A227", quiet: "#7C8699", past: "#4A5468" }[tone];
+
+  return (
+    <div>
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        className="flex items-center gap-2 mb-3 w-full text-left"
+      >
+        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: toneColor }} />
+        <h2 className="text-xs tracking-[0.15em] uppercase font-mono" style={{ color: toneColor }}>
+          {title}
+        </h2>
+        <span className="text-xs text-[#4A5468]">（{items.length}）</span>
+        <span className="flex-1 h-px bg-[#1E2636]" />
+        <span className="text-xs text-[#4A5468]">{collapsed ? "表示" : "隠す"}</span>
+      </button>
+      {!collapsed && (
+        <div className="space-y-2">
+          {items.map((e) => (
+            <Row key={e.id} entry={e} isUndated={isUndated} onUpdate={onUpdate} onRemove={onRemove} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Row({ entry, isUndated, onUpdate, onRemove }) {
+  const meta = sectorMeta(entry.sector);
+  const d = entry.date ? daysUntil(entry.date) : null;
+  const [editingDate, setEditingDate] = useState(isUndated);
+
+  return (
+    <div className="group bg-[#131B2E] border border-[#1E2636] rounded-lg px-3.5 py-3 flex items-center gap-3">
+      <span
+        className="text-[10px] font-mono px-1.5 py-0.5 rounded shrink-0"
+        style={{ backgroundColor: `${meta.color}22`, color: meta.color }}
+      >
+        {meta.label}
+      </span>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-baseline gap-2">
+          <span className="font-mono font-semibold text-[#E8E6DF]">{entry.ticker}</span>
+          {entry.notes && <span className="text-xs text-[#7C8699] truncate">{entry.notes}</span>}
+        </div>
+        {entry.date && !editingDate ? (
+          <button onClick={() => setEditingDate(true)} className="text-xs text-[#7C8699] mt-0.5 hover:text-[#E8E6DF]">
+            {fmtDate(entry.date)}
+            {entry.session === "bmo" && "・寄り前"}
+            {entry.session === "amc" && "・引け後"}
+          </button>
+        ) : (
+          <input
+            type="date"
+            autoFocus={isUndated}
+            value={entry.date}
+            onChange={(ev) => onUpdate(entry.id, { date: ev.target.value })}
+            onBlur={() => setEditingDate(false)}
+            className="mt-1 bg-[#0B1220] border border-[#2A3244] rounded px-2 py-1 text-xs focus:outline-none focus:border-[#C9A227]"
+          />
+        )}
+      </div>
+      {d !== null && (
+        <span
+          className="text-xs font-mono shrink-0"
+          style={{ color: d <= 7 ? "#D9744D" : d <= 30 ? "#C9A227" : "#7C8699" }}
+        >
+          {d === 0 ? "本日" : d > 0 ? `${d}日後` : `${Math.abs(d)}日前`}
+        </span>
+      )}
+      <button
+        onClick={() => onRemove(entry.id)}
+        className="opacity-0 group-hover:opacity-100 text-[#4A5468] hover:text-[#D9744D] transition-opacity shrink-0"
+      >
+        <Trash2 size={14} />
+      </button>
+    </div>
+  );
+}
