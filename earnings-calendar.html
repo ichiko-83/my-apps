@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>決算カレンダー | Earnings Harvest</title>
+<meta name="theme-color" content="#0B1220">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌾</text></svg>">
+<style>
+  :root {
+    --bg: #0B1220;
+    --surface: #131B2E;
+    --border: #1E2636;
+    --border-strong: #2A3244;
+    --text: #E8E6DF;
+    --muted: #7C8699;
+    --dim: #4A5468;
+    --gold: #C9A227;
+    --gold-hover: #DDB53A;
+    --urgent: #D9744D;
+    --sage: #6B9080;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: "SF Mono", "Menlo", "Consolas", monospace; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 32px 20px 96px; }
+
+  .header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 4px; }
+  .eyebrow { display: flex; align-items: center; gap: 8px; color: var(--gold); margin-bottom: 4px; }
+  .eyebrow span { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; }
+  h1 { font-size: 24px; margin: 0; letter-spacing: -0.02em; font-weight: 600; }
+  .subtitle { color: var(--muted); font-size: 14px; margin: 0 0 24px; }
+
+  .btn-add {
+    margin-top: 4px;
+    display: flex; align-items: center; gap: 6px;
+    background: var(--gold); color: var(--bg);
+    border: none; padding: 9px 14px; border-radius: 6px;
+    font-size: 14px; font-weight: 500; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-add:hover { background: var(--gold-hover); }
+
+  .error-box {
+    margin-bottom: 16px; font-size: 12px; color: var(--urgent);
+    background: rgba(217,116,77,0.1); border: 1px solid rgba(217,116,77,0.3);
+    border-radius: 6px; padding: 8px 12px;
+  }
+
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+  .chip {
+    font-size: 12px; padding: 5px 10px; border-radius: 999px;
+    border: 1px solid var(--border-strong); color: var(--muted);
+    background: transparent; cursor: pointer; transition: all 0.15s;
+  }
+  .chip.active { border-color: var(--text); color: var(--text); }
+
+  .form-card {
+    margin-bottom: 32px; background: var(--surface);
+    border: 1px solid var(--border-strong); border-radius: 10px; padding: 16px;
+    display: none;
+  }
+  .form-card.open { display: block; }
+  .form-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .form-card-head span { font-size: 14px; font-weight: 500; }
+  .form-card-head button { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .field label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 4px; }
+  .field input, .field select {
+    width: 100%; background: var(--bg); border: 1px solid var(--border-strong);
+    border-radius: 6px; padding: 7px 10px; font-size: 14px; color: var(--text);
+    font-family: inherit;
+  }
+  .field input.mono { text-transform: uppercase; }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--gold); }
+  .status-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
+  .status-btn {
+    flex: 1; font-size: 12px; padding: 7px; border-radius: 6px;
+    border: 1px solid var(--border-strong); color: var(--dim);
+    background: transparent; cursor: pointer;
+  }
+  .status-btn.est-active { border-color: var(--muted); color: var(--text); background: rgba(124,134,153,0.1); }
+  .status-btn.conf-active { border-color: var(--sage); color: var(--sage); background: rgba(107,144,128,0.1); }
+  .btn-submit {
+    width: 100%; background: var(--gold); color: var(--bg); border: none;
+    border-radius: 6px; padding: 10px; font-size: 14px; font-weight: 500; cursor: pointer;
+  }
+  .btn-submit:disabled { background: var(--border-strong); color: var(--muted); cursor: not-allowed; }
+
+  .section { margin-bottom: 32px; }
+  .section-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; background: none; border: none; width: 100%; cursor: pointer; padding: 0; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .section-title { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; }
+  .section-count { font-size: 11px; color: var(--dim); }
+  .rule { flex: 1; height: 1px; background: var(--border); }
+  .toggle-label { font-size: 11px; color: var(--dim); }
+
+  .rows { display: flex; flex-direction: column; gap: 8px; }
+  .row {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .sector-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; flex-shrink: 0; font-family: monospace; }
+  .row-main { flex: 1; min-width: 0; }
+  .row-top { display: flex; align-items: baseline; gap: 8px; }
+  .ticker { font-family: monospace; font-weight: 600; }
+  .notes { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .date-line { display: flex; align-items: center; gap: 6px; margin-top: 3px; }
+  .date-link { background: none; border: none; color: var(--muted); font-size: 12px; cursor: pointer; padding: 0; }
+  .date-link:hover { color: var(--text); }
+  .status-badge { font-size: 10px; font-family: monospace; padding: 2px 6px; border-radius: 4px; border: none; cursor: pointer; }
+  .status-badge.confirmed { background: rgba(107,144,128,0.15); color: var(--sage); }
+  .status-badge.estimated { background: rgba(124,134,153,0.15); color: var(--muted); }
+  .date-input {
+    margin-top: 4px; background: var(--bg); border: 1px solid var(--border-strong);
+    border-radius: 4px; padding: 4px 8px; font-size: 12px; color: var(--text);
+  }
+  .days-left { font-size: 12px; font-family: monospace; flex-shrink: 0; }
+  .btn-remove {
+    background: none; border: none; color: var(--dim); cursor: pointer; flex-shrink: 0;
+    padding: 2px; font-size: 14px; opacity: 0.6;
+  }
+  .btn-remove:hover { color: var(--urgent); opacity: 1; }
+
+  .empty { text-align: center; padding: 64px 0; color: var(--muted); }
+  .empty .emoji { font-size: 28px; margin-bottom: 12px; opacity: 0.6; }
+  .empty p { font-size: 14px; margin: 0; }
+
+  @media (max-width: 420px) {
+    .form-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div>
+      <div class="eyebrow">🌾<span>Earnings Harvest</span></div>
+      <h1>決算カレンダー</h1>
+    </div>
+    <button class="btn-add" id="btnShowForm">＋ 銘柄を追加</button>
+  </div>
+  <p class="subtitle">収穫のように、決算シーズンの実りどきを見逃さないための一覧です</p>
+
+  <div class="error-box" id="errorBox" style="display:none;"></div>
+
+  <div class="filters" id="filters"></div>
+
+  <div class="form-card" id="formCard">
+    <div class="form-card-head">
+      <span>新しい銘柄を追加</span>
+      <button id="btnCloseForm">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="field">
+        <label>ティッカー</label>
+        <input id="fTicker" class="mono" placeholder="例：MARA">
+      </div>
+      <div class="field">
+        <label>セクター</label>
+        <select id="fSector"></select>
+      </div>
+      <div class="field">
+        <label>決算日（任意）</label>
+        <input id="fDate" type="date">
+      </div>
+      <div class="field">
+        <label>タイミング</label>
+        <select id="fSession">
+          <option value="unknown">未定</option>
+          <option value="bmo">寄り付き前（BMO）</option>
+          <option value="amc">引け後（AMC）</option>
+        </select>
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:12px;">
+      <label>メモ（任意）</label>
+      <input id="fNotes" placeholder="例：ガイダンス注目">
+    </div>
+    <div class="status-toggle">
+      <button class="status-btn est-active" id="fEstBtn">未確定（推定）</button>
+      <button class="status-btn" id="fConfBtn">確定（IR/8-K確認済み）</button>
+    </div>
+    <button class="btn-submit" id="btnAdd" disabled>追加する</button>
+  </div>
+
+  <div id="sections"></div>
+  <div class="empty" id="emptyState" style="display:none;">
+    <div class="emoji">🌱</div>
+    <p>まだ銘柄が登録されていません。右上から追加してください。</p>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = "earnings-calendar-entries";
+const SECTORS = [
+  { id: "ai", label: "AIインフラ", color: "#C9A227" },
+  { id: "semi", label: "半導体", color: "#5B8FB0" },
+  { id: "energy", label: "エネルギー", color: "#D9744D" },
+  { id: "defense", label: "防衛", color: "#8A93A6" },
+  { id: "agri", label: "農業/資源", color: "#6B9080" },
+  { id: "other", label: "その他", color: "#8C7FB0" },
+];
+const SEED = [
+  { ticker: "WULF", sector: "ai" },
+  { ticker: "APLD", sector: "ai" },
+  { ticker: "BW", sector: "energy" },
+  { ticker: "GLW", sector: "ai" },
+  { ticker: "COHR", sector: "semi" },
+  { ticker: "CEG", sector: "energy" },
+  { ticker: "AGRO", sector: "agri" },
+];
+
+let entries = [];
+let sectorFilter = "all";
+let collapsed = { past: true };
+let editingDateId = null;
+let formConfirmed = false;
+
+function uid() { return Math.random().toString(36).slice(2, 10); }
+function sectorMeta(id) { return SECTORS.find(s => s.id === id) || SECTORS[SECTORS.length - 1]; }
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const target = new Date(dateStr + "T00:00:00");
+  return Math.round((target - today) / 86400000);
+}
+function fmtDate(dateStr) {
+  const d = new Date(dateStr + "T00:00:00");
+  return `${d.getMonth()+1}/${d.getDate()}（${"日月火水木金土"[d.getDay()]}）`;
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      entries = JSON.parse(raw).map(e => ({ confirmed: false, ...e }));
+    } else {
+      entries = SEED.map(s => ({ id: uid(), ticker: s.ticker, sector: s.sector, date: "", session: "unknown", notes: "", confirmed: false }));
+      save();
+    }
+  } catch (e) {
+    showError("保存データの読み込みに失敗しました。この端末では変更が保存されない可能性があります。");
+    entries = SEED.map(s => ({ id: uid(), ticker: s.ticker, sector: s.sector, date: "", session: "unknown", notes: "", confirmed: false }));
+  }
+}
+function save() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    hideError();
+  } catch (e) {
+    showError("保存に失敗しました。もう一度試してください。");
+  }
+}
+function showError(msg) { const b = document.getElementById("errorBox"); b.textContent = msg; b.style.display = "block"; }
+function hideError() { document.getElementById("errorBox").style.display = "none"; }
+
+function renderFilters() {
+  const el = document.getElementById("filters");
+  el.innerHTML = "";
+  const allChip = document.createElement("button");
+  allChip.className = "chip" + (sectorFilter === "all" ? " active" : "");
+  allChip.textContent = "すべて";
+  allChip.onclick = () => { sectorFilter = "all"; renderAll(); };
+  el.appendChild(allChip);
+  SECTORS.forEach(s => {
+    const chip = document.createElement("button");
+    chip.className = "chip";
+    chip.textContent = s.label;
+    chip.style.borderColor = sectorFilter === s.id ? s.color : "#2A3244";
+    chip.style.color = sectorFilter === s.id ? s.color : "#7C8699";
+    chip.onclick = () => { sectorFilter = s.id; renderAll(); };
+    el.appendChild(chip);
+  });
+}
+
+function populateSectorSelect() {
+  const sel = document.getElementById("fSector");
+  sel.innerHTML = SECTORS.map(s => `<option value="${s.id}">${s.label}</option>`).join("");
+}
+
+function renderRow(e, isUndated) {
+  const meta = sectorMeta(e.sector);
+  const d = e.date ? daysUntil(e.date) : null;
+  const row = document.createElement("div");
+  row.className = "row";
+
+  const badge = document.createElement("span");
+  badge.className = "sector-badge";
+  badge.style.background = meta.color + "22";
+  badge.style.color = meta.color;
+  badge.textContent = meta.label;
+  row.appendChild(badge);
+
+  const main = document.createElement("div");
+  main.className = "row-main";
+
+  const top = document.createElement("div");
+  top.className = "row-top";
+  top.innerHTML = `<span class="ticker">${e.ticker}</span>` + (e.notes ? `<span class="notes">${e.notes}</span>` : "");
+  main.appendChild(top);
+
+  const showInput = isUndated || editingDateId === e.id || !e.date;
+  if (e.date && !showInput) {
+    const line = document.createElement("div");
+    line.className = "date-line";
+    const link = document.createElement("button");
+    link.className = "date-link";
+    link.textContent = fmtDate(e.date) + (e.session === "bmo" ? "・寄り前" : e.session === "amc" ? "・引け後" : "");
+    link.onclick = () => { editingDateId = e.id; renderAll(); };
+    line.appendChild(link);
+
+    const status = document.createElement("button");
+    status.className = "status-badge " + (e.confirmed ? "confirmed" : "estimated");
+    status.textContent = e.confirmed ? "確定" : "未確定";
+    status.title = "タップで切り替え";
+    status.onclick = () => { e.confirmed = !e.confirmed; save(); renderAll(); };
+    line.appendChild(status);
+
+    main.appendChild(line);
+  } else {
+    const input = document.createElement("input");
+    input.type = "date";
+    input.className = "date-input";
+    input.value = e.date || "";
+    input.onchange = (ev) => { e.date = ev.target.value; save(); };
+    input.onblur = () => { editingDateId = null; renderAll(); };
+    main.appendChild(input);
+    if (isUndated) setTimeout(() => input.focus(), 0);
+  }
+
+  row.appendChild(main);
+
+  if (d !== null) {
+    const days = document.createElement("span");
+    days.className = "days-left mono";
+    days.style.color = d <= 7 ? "#D9744D" : d <= 30 ? "#C9A227" : "#7C8699";
+    days.textContent = d === 0 ? "本日" : d > 0 ? `${d}日後` : `${Math.abs(d)}日前`;
+    row.appendChild(days);
+  }
+
+  const remove = document.createElement("button");
+  remove.className = "btn-remove";
+  remove.innerHTML = "✕";
+  remove.onclick = () => { entries = entries.filter(x => x.id !== e.id); save(); renderAll(); };
+  row.appendChild(remove);
+
+  return row;
+}
+
+function renderSection(title, tone, items, isUndated, key) {
+  if (!items.length) return null;
+  const toneColor = { urgent: "#D9744D", normal: "#C9A227", quiet: "#7C8699", past: "#4A5468" }[tone];
+  const wrap = document.createElement("div");
+  wrap.className = "section";
+
+  const head = document.createElement("button");
+  head.className = "section-head";
+  const isCollapsed = collapsed[key];
+  head.innerHTML = `
+    <span class="dot" style="background:${toneColor}"></span>
+    <span class="section-title mono" style="color:${toneColor}">${title}</span>
+    <span class="section-count">（${items.length}）</span>
+    <span class="rule"></span>
+    <span class="toggle-label">${isCollapsed ? "表示" : "隠す"}</span>
+  `;
+  head.onclick = () => { collapsed[key] = !collapsed[key]; renderAll(); };
+  wrap.appendChild(head);
+
+  if (!isCollapsed) {
+    const rows = document.createElement("div");
+    rows.className = "rows";
+    items.forEach(e => rows.appendChild(renderRow(e, isUndated)));
+    wrap.appendChild(rows);
+  }
+  return wrap;
+}
+
+function renderAll() {
+  renderFilters();
+  const filtered = sectorFilter === "all" ? entries : entries.filter(e => e.sector === sectorFilter);
+  const withDate = filtered.filter(e => e.date).sort((a,b) => a.date.localeCompare(b.date));
+  const noDate = filtered.filter(e => !e.date).sort((a,b) => a.ticker.localeCompare(b.ticker));
+
+  const soon = [], month = [], later = [], past = [];
+  withDate.forEach(e => {
+    const d = daysUntil(e.date);
+    if (d < 0) past.push(e);
+    else if (d <= 7) soon.push(e);
+    else if (d <= 30) month.push(e);
+    else later.push(e);
+  });
+
+  const container = document.getElementById("sections");
+  container.innerHTML = "";
+  [
+    renderSection("今週中", "urgent", soon, false, "soon"),
+    renderSection("今月中", "normal", month, false, "month"),
+    renderSection("それ以降", "quiet", later, false, "later"),
+    renderSection("日付未登録", "quiet", noDate, true, "noDate"),
+    renderSection("過去の決算", "past", past, false, "past"),
+  ].forEach(s => { if (s) container.appendChild(s); });
+
+  document.getElementById("emptyState").style.display = entries.length === 0 ? "block" : "none";
+}
+
+function resetForm() {
+  document.getElementById("fTicker").value = "";
+  document.getElementById("fSector").value = "ai";
+  document.getElementById("fDate").value = "";
+  document.getElementById("fSession").value = "unknown";
+  document.getElementById("fNotes").value = "";
+  formConfirmed = false;
+  updateStatusButtons();
+  document.getElementById("btnAdd").disabled = true;
+}
+function updateStatusButtons() {
+  document.getElementById("fEstBtn").className = "status-btn" + (!formConfirmed ? " est-active" : "");
+  document.getElementById("fConfBtn").className = "status-btn" + (formConfirmed ? " conf-active" : "");
+}
+
+document.getElementById("btnShowForm").onclick = () => document.getElementById("formCard").classList.add("open");
+document.getElementById("btnCloseForm").onclick = () => document.getElementById("formCard").classList.remove("open");
+document.getElementById("fTicker").oninput = (e) => {
+  document.getElementById("btnAdd").disabled = !e.target.value.trim();
+};
+document.getElementById("fEstBtn").onclick = () => { formConfirmed = false; updateStatusButtons(); };
+document.getElementById("fConfBtn").onclick = () => { formConfirmed = true; updateStatusButtons(); };
+document.getElementById("btnAdd").onclick = () => {
+  const ticker = document.getElementById("fTicker").value.trim().toUpperCase();
+  if (!ticker) return;
+  entries.push({
+    id: uid(),
+    ticker,
+    sector: document.getElementById("fSector").value,
+    date: document.getElementById("fDate").value,
+    session: document.getElementById("fSession").value,
+    notes: document.getElementById("fNotes").value.trim(),
+    confirmed: formConfirmed,
+  });
+  save();
+  resetForm();
+  document.getElementById("formCard").classList.remove("open");
+  renderAll();
+};
+
+populateSectorSelect();
+load();
+renderAll();
+</script>
+</body>
+</html>
