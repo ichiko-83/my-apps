@@ -77,6 +77,7 @@
     border-radius: 6px; padding: 7px 10px; font-size: 14px; color: var(--text);
     font-family: inherit;
   }
+  .field input[type="date"] { color-scheme: dark; }
   .field input.mono { text-transform: uppercase; }
   .field input:focus, .field select:focus { outline: none; border-color: var(--gold); }
   .status-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
@@ -121,6 +122,11 @@
   .date-input {
     margin-top: 4px; background: var(--bg); border: 1px solid var(--border-strong);
     border-radius: 4px; padding: 4px 8px; font-size: 12px; color: var(--text);
+    color-scheme: dark;
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.8);
+    cursor: pointer;
   }
   .days-left { font-size: 12px; font-family: monospace; flex-shrink: 0; }
   .btn-remove {
@@ -332,6 +338,7 @@ function renderRow(e, isUndated) {
     input.value = e.date || "";
     input.onchange = (ev) => { e.date = ev.target.value; save(); };
     input.onblur = () => { editingDateId = null; renderAll(); };
+    input.onclick = () => { if (input.showPicker) { try { input.showPicker(); } catch (err) {} } };
     main.appendChild(input);
     if (isUndated) setTimeout(() => input.focus(), 0);
   }
@@ -430,6 +437,9 @@ document.getElementById("btnShowForm").onclick = () => document.getElementById("
 document.getElementById("btnCloseForm").onclick = () => document.getElementById("formCard").classList.remove("open");
 document.getElementById("fTicker").oninput = (e) => {
   document.getElementById("btnAdd").disabled = !e.target.value.trim();
+};
+document.getElementById("fDate").onclick = function() {
+  if (this.showPicker) { try { this.showPicker(); } catch (err) {} }
 };
 document.getElementById("fEstBtn").onclick = () => { formConfirmed = false; updateStatusButtons(); };
 document.getElementById("fConfBtn").onclick = () => { formConfirmed = true; updateStatusButtons(); };
